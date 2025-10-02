@@ -37,3 +37,6 @@ TA();
 
 // Activation hook.
 register_activation_hook( __FILE__, array( 'Tahlilgar_Analyzer', 'activate' ) );
+
+// Deactivation hook.
+register_deactivation_hook( __FILE__, array( 'Tahlilgar_Analyzer', 'deactivate' ) );
