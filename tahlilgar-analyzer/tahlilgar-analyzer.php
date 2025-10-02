@@ -3,7 +3,7 @@
  * Plugin Name: تحلیلگر
  * Plugin URI: https://example.com/
  * Description: A simple WordPress plugin.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: Your Name
  * Author URI: https://example.com/
  */
@@ -12,10 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
 
-// Load Composer autoloader if it exists.
-if ( file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
-    require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
-}
 
 /**
  * Create pages on plugin activation.
@@ -490,26 +486,14 @@ function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
 }
 add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
 
-/**
- * Initialize the GitHub update checker.
- */
-function tahlilgar_analyzer_initialize_updater() {
-    // Check if the update checker class exists.
-    if ( ! class_exists( 'YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory' ) ) {
-        return;
-    }
+// --- GitHub Plugin Updater ---
+require plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
 
-    $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/reddyindia/jules/',
-        __FILE__,
-        'tahlilgar-analyzer'
-    );
+$myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+    'https://github.com/reddyindia/jules/',
+    __FILE__,
+    'tahlilgar-analyzer'
+);
 
-    // The branch that contains the plugin.
-    // Set to the branch that contains the stable release.
-    $updateChecker->setBranch('main');
-
-    // The subdirectory that contains the plugin files.
-    $updateChecker->setPluginSubdirectory('tahlilgar-analyzer');
-}
-add_action( 'plugins_loaded', 'tahlilgar_analyzer_initialize_updater' );
+// Set the branch that contains the stable release.
+$myUpdateChecker->setBranch('main');
