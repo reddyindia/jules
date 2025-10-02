@@ -404,9 +404,13 @@ class Tahlilgar_Analyzer {
             wp_enqueue_script( 'form-builder-script', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-sortable' ), '3.21.0', true );
             wp_enqueue_script('tahlilgar-form-builder-loader', TA_PLUGIN_URL . 'assets/js/form-builder-loader.js', array( 'form-builder-script', 'wp-api', 'htmx-script' ), filemtime( TA_PLUGIN_PATH . 'assets/js/form-builder-loader.js' ), true);
 
+            $form_management_page = get_page_by_path('form-management');
+            $management_url = $form_management_page ? get_permalink($form_management_page->ID) : home_url('/form-management');
+
             wp_localize_script( 'tahlilgar-form-builder-loader', 'tahlilgar_form_builder', array(
-                'rest_url' => get_rest_url( null, 'tahlilgar/v1/forms' ),
-                'nonce'    => wp_create_nonce( 'wp_rest' )
+                'rest_url'       => get_rest_url( null, 'tahlilgar/v1/forms' ),
+                'nonce'          => wp_create_nonce( 'wp_rest' ),
+                'management_url' => $management_url,
             ) );
         }
 

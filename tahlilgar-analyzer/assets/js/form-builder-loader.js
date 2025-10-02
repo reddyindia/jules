@@ -101,9 +101,7 @@ jQuery(document).ready(function($) {
             if (evt.detail.successful && evt.detail.pathInfo.requestPath === tahlilgar_form_builder.rest_url) {
                 statusDiv.text('فرم با موفقیت ذخیره شد!').css('color', 'green');
                 setTimeout(function() {
-                    const managementUrl = new URL(window.location.href);
-                    managementUrl.pathname = '/form-management';
-                    window.location.href = managementUrl.href;
+                    window.location.href = tahlilgar_form_builder.management_url;
                 }, 1500);
             }
         });
