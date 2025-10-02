@@ -3,7 +3,7 @@
  * Plugin Name: تحلیلگر
  * Plugin URI: https://github.com/reddyindia/jules/
  * Description: یک افزونه وردپرسی پیشرفته برای ساخت و مدیریت فرم‌ها و تحلیل نتایج با ساختار مدرن و شیءگرا.
- * Version: 2.0.3
+ * Version: 2.0.2
  * Author: Jules
  * Author URI: https://github.com/reddyindia/jules/
  */
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'TA_VERSION', '2.0.3' );
+define( 'TA_VERSION', '2.0.2' );
 define( 'TA_PLUGIN_FILE', __FILE__ );
 define( 'TA_PLUGIN_PATH', plugin_dir_path( TA_PLUGIN_FILE ) );
 define( 'TA_PLUGIN_URL', plugin_dir_url( TA_PLUGIN_FILE ) );

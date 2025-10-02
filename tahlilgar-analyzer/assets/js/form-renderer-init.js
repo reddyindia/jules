@@ -13,71 +13,51 @@ jQuery(document).ready(function($) {
         return;
     }
 
-    // Custom Render Templates for our new fields
-    const renderTemplates = {
-        welcome_page: function(fieldData) {
-            let title = fieldData.label ? `<h2>${fieldData.label}</h2>` : '';
-            let description = fieldData.description ? `<p>${fieldData.description}</p>` : '';
-            return {
-                field: `<div class="tahlilgar-welcome-page">${title}${description}</div>`
-            };
-        },
-        end_page: function(fieldData) {
-            let title = fieldData.label ? `<h2>${fieldData.label}</h2>` : '';
-            let description = fieldData.description ? `<p>${fieldData.description}</p>` : '';
-            return {
-                field: `<div class="tahlilgar-end-page">${title}${description}</div>`
-            };
-        },
-        question_group: function(fieldData) {
-            // formRender automatically renders nested fields. We just provide the fieldset.
-            return {
-                field: `<fieldset class="tahlilgar-question-group"><legend>${fieldData.label || ''}</legend></fieldset>`
-            };
-        },
-        // The ranking field has been removed for now.
-    };
-
     // Render the form
-    formContainer.formRender({
-        formData: rendererData.form_json,
-        render: {
-            templates: renderTemplates
-        }
+    const formRenderInstance = formContainer.formRender({
+        formData: rendererData.form_json
     });
 
-    // Wrap the rendered fields in a form tag with HTMX attributes
-    const formFields = formContainer.html();
-    const statusDivId = `tahlilgar-form-status-${rendererData.form_id}`;
+    // Add a submit button if one doesn't exist
+    if (formContainer.find('button[type="submit"]').length === 0) {
+        formContainer.append('<button type="submit" class="tahlilgar-submit-button">ارسال</button>');
+    }
 
-    const form = $('<form>')
-        .attr('hx-post', rendererData.submission_url)
-        .attr('hx-ext', 'json-enc') // Use the JSON encoding extension
-        .attr('hx-target', `#${statusDivId}`)
-        .attr('hx-swap', 'innerHTML')
-        .attr('hx-indicator', `#${formContainerId}`)
-        .attr('hx-headers', `{"X-WP-Nonce": "${rendererData.nonce}"}`);
+    // Add a div for status messages
+    formContainer.append('<div class="tahlilgar-form-status" style="margin-top: 15px;"></div>');
 
-    form.html(formFields);
-    form.append('<button type="submit" class="tahlilgar-submit-button">ارسال</button>');
-    form.append(`<div id="${statusDivId}" class="tahlilgar-form-status" style="margin-top: 15px;"></div>`);
 
-    formContainer.html(form);
+    formContainer.on('submit', function(e) {
+        e.preventDefault();
+        const statusDiv = formContainer.find('.tahlilgar-form-status');
+        const submitButton = formContainer.find('button[type="submit"]');
 
-    // HTMX needs to be initialized on the new content
-    htmx.process(formContainer[0]);
+        const userData = formRenderInstance.userData;
 
-    // On success, we want to replace the whole form, not just the status div.
-    formContainer.on('htmx:afterRequest', function(evt) {
-        if (evt.detail.successful) {
-            try {
-                const response = JSON.parse(evt.detail.xhr.responseText);
-                if (response.success) {
-                    formContainer.html('<div class="tahlilgar-form-success">پاسخ شما با موفقیت ثبت شد. متشکریم!</div>');
-                }
-            } catch(e) {
-                // If response is not JSON, HTMX will have already placed the error string in the target div.
-            }
+        if (!userData) {
+            statusDiv.text('لطفاً فرم را پر کنید.').css('color', 'red');
+            return;
         }
+
+        statusDiv.text('در حال ارسال پاسخ...').css('color', 'blue');
+        submitButton.prop('disabled', true);
+
+        $.ajax({
+            url: rendererData.submission_url,
+            method: 'POST',
+            contentType: 'application/json',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', rendererData.nonce);
+            },
+            data: JSON.stringify(userData),
+            success: function(response) {
+                formContainer.html('<div class="tahlilgar-form-success">پاسخ شما با موفقیت ثبت شد. متشکریم!</div>');
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'خطایی در هنگام ارسال پاسخ رخ داد.';
+                 statusDiv.text('خطا: ' + errorMsg).css('color', 'red');
+                submitButton.prop('disabled', false);
+            }
+        });
     });
 });
