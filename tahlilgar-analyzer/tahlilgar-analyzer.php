@@ -487,15 +487,15 @@ function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
 add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
 
 // --- GitHub Plugin Updater ---
-require_once plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
-
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
-
-$myUpdateChecker = PucFactory::buildUpdateChecker(
-    'https://github.com/reddyindia/jules/',
-    __FILE__,
-    'tahlilgar-analyzer'
-);
-
-// Set the branch that contains the stable release.
-$myUpdateChecker->setBranch('main');
+// Conditionally load the updater only if the library files exist.
+$puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+if ( file_exists( $puc_file ) ) {
+    require_once $puc_file;
+    $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/reddyindia/jules/',
+        __FILE__,
+        'tahlilgar-analyzer'
+    );
+    // Set the branch that contains the stable release.
+    $myUpdateChecker->setBranch('main');
+}
