@@ -43,6 +43,23 @@ class Tahlilgar_Analyzer {
         $this->define_constants();
         $this->includes();
         $this->init_hooks();
+        $this->init_updater();
+    }
+
+    /**
+     * Initialize the plugin updater.
+     */
+    private function init_updater() {
+        $puc_file = TA_PLUGIN_PATH . 'plugin-update-checker/plugin-update-checker.php';
+        if ( file_exists( $puc_file ) ) {
+            require_once $puc_file;
+            $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+                'https://github.com/reddyindia/jules/',
+                TA_PLUGIN_PATH . 'tahlilgar-analyzer.php',
+                'tahlilgar-analyzer'
+            );
+            $myUpdateChecker->getVcsApi()->enableReleaseAssets();
+        }
     }
 
     /**
@@ -51,7 +68,7 @@ class Tahlilgar_Analyzer {
     private function define_constants() {
         define( 'TA_PLUGIN_FILE', __FILE__ );
         define( 'TA_PLUGIN_BASENAME', plugin_basename( TA_PLUGIN_FILE ) );
-        define( 'TA_VERSION', '2.0.0' );
+        define( 'TA_VERSION', '2.0.1' );
     }
 
     /**
@@ -499,5 +516,8 @@ class Tahlilgar_Analyzer {
                 'page_template' => 'template-results.php'
             ) );
         }
+
+        // Flush rewrite rules to make sure the new pages are accessible
+        flush_rewrite_rules();
     }
 }
