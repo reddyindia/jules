@@ -76,6 +76,7 @@ class Tahlilgar_Analyzer {
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_action( 'wp_print_styles', array( $this, 'dequeue_theme_styles' ), 100 );
         add_action( 'init', array( $this, 'init' ) );
+        add_action( 'init', array( $this, 'check_version_and_setup_pages' ) );
         add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
     }
 
@@ -461,71 +462,67 @@ class Tahlilgar_Analyzer {
     }
 
     /**
-     * Plugin activation.
+     * Checks plugin version and runs setup if needed.
+     * This ensures that plugin updates which require setup (like creating pages) are run.
+     */
+    public function check_version_and_setup_pages() {
+        $current_db_version = get_option( 'tahlilgar_analyzer_version', '0.0.0' );
+        if ( version_compare( $current_db_version, TA_VERSION, '<' ) ) {
+            $this->setup_pages();
+            update_option( 'tahlilgar_analyzer_version', TA_VERSION );
+        }
+    }
+
+    /**
      * Creates the necessary pages for the plugin to function.
      */
-    public static function activate() {
-        // Dashboard Page
-        if ( ! get_page_by_path( 'dashboard' ) ) {
-            wp_insert_post( array(
-                'post_title'    => __( 'Dashboard', 'tahlilgar-analyzer' ),
-                'post_name'     => 'dashboard',
-                'post_status'   => 'publish',
-                'post_author'   => 1,
-                'post_type'     => 'page',
-                'page_template' => 'template-dashboard.php'
-            ) );
-        }
+    private function setup_pages() {
+        $pages = array(
+            'dashboard'       => array(
+                'title'    => __( 'Dashboard', 'tahlilgar-analyzer' ),
+                'template' => 'template-dashboard.php',
+            ),
+            'login'           => array(
+                'title'    => __( 'Login', 'tahlilgar-analyzer' ),
+                'template' => 'template-login.php',
+            ),
+            'form-builder'    => array(
+                'title'    => __( 'Form Builder', 'tahlilgar-analyzer' ),
+                'template' => 'template-form-builder.php',
+            ),
+            'form-management' => array(
+                'title'    => __( 'Form Management', 'tahlilgar-analyzer' ),
+                'template' => 'template-form-management.php',
+            ),
+            'results'         => array(
+                'title'    => __( 'Results', 'tahlilgar-analyzer' ),
+                'template' => 'template-results.php',
+            ),
+        );
 
-        // Login Page
-        if ( ! get_page_by_path( 'login' ) ) {
-            wp_insert_post( array(
-                'post_title'    => __( 'Login', 'tahlilgar-analyzer' ),
-                'post_name'     => 'login',
-                'post_status'   => 'publish',
-                'post_author'   => 1,
-                'post_type'     => 'page',
-                'page_template' => 'template-login.php'
-            ) );
+        foreach ( $pages as $slug => $page ) {
+            if ( ! get_page_by_path( $slug ) ) {
+                wp_insert_post( array(
+                    'post_title'    => $page['title'],
+                    'post_name'     => $slug,
+                    'post_status'   => 'publish',
+                    'post_author'   => 1,
+                    'post_type'     => 'page',
+                    'page_template' => $page['template'],
+                ) );
+            }
         }
-
-        // Form Builder Page
-        if ( ! get_page_by_path( 'form-builder' ) ) {
-            wp_insert_post( array(
-                'post_title'    => __( 'Form Builder', 'tahlilgar-analyzer' ),
-                'post_name'     => 'form-builder',
-                'post_status'   => 'publish',
-                'post_author'   => 1,
-                'post_type'     => 'page',
-                'page_template' => 'template-form-builder.php'
-            ) );
-        }
-
-        // Form Management Page
-        if ( ! get_page_by_path( 'form-management' ) ) {
-            wp_insert_post( array(
-                'post_title'    => __( 'Form Management', 'tahlilgar-analyzer' ),
-                'post_name'     => 'form-management',
-                'post_status'   => 'publish',
-                'post_author'   => 1,
-                'post_type'     => 'page',
-                'page_template' => 'template-form-management.php'
-            ) );
-        }
-
-        // Results Page
-        if ( ! get_page_by_path( 'results' ) ) {
-            wp_insert_post( array(
-                'post_title'    => __( 'Results', 'tahlilgar-analyzer' ),
-                'post_name'     => 'results',
-                'post_status'   => 'publish',
-                'post_author'   => 1,
-                'post_type'     => 'page',
-                'page_template' => 'template-results.php'
-            ) );
-        }
-
         // Flush rewrite rules to make sure the new pages are accessible
+        flush_rewrite_rules();
+    }
+
+    /**
+     * Plugin activation.
+     * Just flushes rewrite rules. The main setup runs on 'init'.
+     */
+    public static function activate() {
+        // The main setup runs on the 'init' hook to ensure all WP functions are available
+        // and to handle plugin updates. We just flush the rules here.
         flush_rewrite_rules();
     }
 }
