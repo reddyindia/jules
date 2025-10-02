@@ -1,9 +1,8 @@
 <?php
 /**
- * Template Name: Dashboard Template
+ * Template Name: Form Builder Template
  *
- * This template provides a modern, animated dashboard layout with a collapsible sidebar
- * and a day/night theme switcher.
+ * This template provides the layout for the drag-and-drop form builder.
  */
 
 // Redirect to login page if user is not logged in
@@ -15,8 +14,7 @@ if ( ! is_user_logged_in() ) {
     }
 }
 
-// We don't want the default theme header and footer for this full-screen dashboard.
-// We'll manually add the necessary head/foot hooks.
+// We don't want the default theme header and footer for this full-screen layout.
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -25,20 +23,19 @@ if ( ! is_user_logged_in() ) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php wp_head(); // Crucial for loading styles, scripts, and admin bar ?>
 </head>
-<body <?php body_class('dashboard-body'); ?>>
+<body <?php body_class('dashboard-body'); // Reuse dashboard styles for consistency ?>>
 
     <div id="dashboard-container">
-        <!-- Collapsible Sidebar -->
         <nav id="dashboard-sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h2 class="brand-logo">تحلیلگر</h2>
                 <button id="sidebar-toggle-close" class="sidebar-toggle-btn">&times;</button>
             </div>
-            <ul class="sidebar-menu">
-                <li class="menu-item active"><a href="#">
+             <ul class="sidebar-menu">
+                <li class="menu-item"><a href="<?php echo get_permalink( get_page_by_path( 'dashboard' ) ); ?>">
                     <span class="icon">📊</span><span class="text">داشبورد</span>
                 </a></li>
-                <li class="menu-item"><a href="<?php echo get_permalink( get_page_by_path( 'form-builder' ) ); ?>">
+                <li class="menu-item active"><a href="#">
                     <span class="icon">📝</span><span class="text">فرم‌ساز</span>
                 </a></li>
                 <li class="menu-item"><a href="#">
@@ -58,11 +55,12 @@ if ( ! is_user_logged_in() ) {
             </div>
         </nav>
 
-        <!-- Main Content -->
+        <!-- Main Content for Form Builder -->
         <main id="main-content">
             <header class="main-header">
                 <div class="header-left">
                     <button id="sidebar-toggle-open" class="sidebar-toggle-btn">☰</button>
+                    <h1>فرم‌ساز پیشرفته</h1>
                 </div>
                 <div class="header-right">
                     <div class="theme-switcher">
@@ -79,9 +77,10 @@ if ( ! is_user_logged_in() ) {
                 </div>
             </header>
             <div class="content-area">
-                <h1>خوش آمدید!</h1>
-                <p>اینجا داشبورد تحلیلگر شماست. از منو برای ناوبری استفاده کنید.</p>
-                <!-- Add more widgets and content here -->
+                <div id="form-builder-wrap">
+                    <!-- The formBuilder instance will be rendered here -->
+                </div>
+                 <button id="save-form-btn" class="button-primary">ذخیره فرم</button>
             </div>
         </main>
     </div>
