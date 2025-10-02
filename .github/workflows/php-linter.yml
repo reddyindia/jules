@@ -1,0 +1,25 @@
+name: PHP Linter
+
+on: [push, pull_request]
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0' # Or your desired PHP version
+
+    - name: Install PHP_CodeSniffer and WordPress Coding Standards
+      run: |
+        composer require --dev squizlabs/php_codesniffer
+        composer require --dev wp-coding-standards/wpcs
+        vendor/bin/phpcs --config-set installed_paths ../../wp-coding-standards/wpcs
+
+    - name: Run PHP_CodeSniffer
+      run: vendor/bin/phpcs --standard=WordPress .

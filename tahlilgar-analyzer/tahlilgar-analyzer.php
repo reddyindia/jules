@@ -70,3 +70,27 @@ function tahlilgar_analyzer_load_template( $template ) {
     return $template;
 }
 add_filter( 'page_template', 'tahlilgar_analyzer_load_template' );
+
+/**
+ * Enqueue dashboard assets.
+ */
+function tahlilgar_analyzer_enqueue_assets() {
+    // Only load on the dashboard page
+    if ( is_page( 'dashboard' ) ) {
+        wp_enqueue_style(
+            'tahlilgar-dashboard-style',
+            plugin_dir_url( __FILE__ ) . 'assets/css/dashboard.css',
+            array(),
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/dashboard.css' )
+        );
+
+        wp_enqueue_script(
+            'tahlilgar-dashboard-script',
+            plugin_dir_url( __FILE__ ) . 'assets/js/dashboard.js',
+            array( 'jquery' ),
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/dashboard.js' ),
+            true
+        );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'tahlilgar_analyzer_enqueue_assets' );
