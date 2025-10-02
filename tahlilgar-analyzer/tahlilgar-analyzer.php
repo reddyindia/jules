@@ -131,11 +131,20 @@ function tahlilgar_analyzer_enqueue_assets() {
             true
         );
 
+        // Custom fields script
+        wp_enqueue_script(
+            'tahlilgar-form-builder-custom-fields',
+            plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-custom-fields.js',
+            array( 'form-builder-script' ),
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-custom-fields.js' ),
+            true
+        );
+
         // Local init script
         wp_enqueue_script(
             'tahlilgar-form-builder-init',
             plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-init.js',
-            array( 'form-builder-script' ), // Depends on the CDN script
+            array( 'form-builder-script', 'tahlilgar-form-builder-custom-fields' ), // Depends on custom fields
             filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-init.js' ),
             true
         );
@@ -165,51 +174,69 @@ add_action( 'init', 'tahlilgar_analyzer_register_form_cpt' );
 
 
 /**
- * AJAX handler for saving the form.
+ * Register custom REST API endpoint for saving forms.
  */
-function tahlilgar_analyzer_save_form_ajax() {
-    // Check for nonce security. The action name must match the one used in wp_create_nonce.
-    if ( ! check_ajax_referer( 'save_tahlilgar_form', 'security' ) ) {
-        wp_send_json_error( 'Invalid nonce' );
-    }
+function tahlilgar_analyzer_register_rest_routes() {
+    register_rest_route( 'tahlilgar/v1', '/forms', array(
+        'methods'             => WP_REST_Server::CREATABLE,
+        'callback'            => 'tahlilgar_analyzer_save_form_rest_handler',
+        'permission_callback' => function () {
+            return current_user_can( 'publish_posts' );
+        },
+        'args' => array(
+            'form_title' => array(
+                'required' => true,
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'form_data' => array(
+                'required' => true,
+            ),
+        ),
+    ) );
+}
+add_action( 'rest_api_init', 'tahlilgar_analyzer_register_rest_routes' );
 
-    // Check user capabilities
-    if ( ! current_user_can( 'publish_posts' ) ) {
-        wp_send_json_error( 'You do not have permission to save forms.' );
-    }
-
-    $form_data = isset( $_POST['form_data'] ) ? wp_unslash( $_POST['form_data'] ) : '';
-    $form_title = isset( $_POST['form_title'] ) ? sanitize_text_field( $_POST['form_title'] ) : 'Untitled Form';
+/**
+ * REST API handler for saving the form.
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+function tahlilgar_analyzer_save_form_rest_handler( WP_REST_Request $request ) {
+    $form_title = $request->get_param( 'form_title' );
+    $form_data  = $request->get_param( 'form_data' ); // Data is already unslashed by REST API
 
     if ( empty( $form_data ) ) {
-        wp_send_json_error( 'No form data received.' );
+        return new WP_Error( 'no_data', 'No form data received.', array( 'status' => 400 ) );
     }
 
-    // Create a new post of our CPT
     $post_id = wp_insert_post( array(
         'post_title'   => $form_title,
-        'post_content' => $form_data, // Storing JSON in post_content
+        'post_content' => wp_json_encode( $form_data, JSON_UNESCAPED_UNICODE ), // Store as proper JSON
         'post_status'  => 'publish',
         'post_type'    => 'tahlilgar_form',
     ) );
 
     if ( is_wp_error( $post_id ) ) {
-        wp_send_json_error( $post_id->get_error_message() );
-    } else {
-        wp_send_json_success( array( 'post_id' => $post_id, 'message' => 'Form saved successfully!' ) );
+        return new WP_Error( 'save_error', $post_id->get_error_message(), array( 'status' => 500 ) );
     }
-}
-add_action( 'wp_ajax_save_tahlilgar_form', 'tahlilgar_analyzer_save_form_ajax' );
 
-// In the enqueue function, we need to localize the script to pass ajax_url and nonce
+    $response = new WP_REST_Response( array( 'post_id' => $post_id, 'message' => 'Form saved successfully!' ), 201 );
+    $response->header( 'Location', get_edit_post_link( $post_id, 'raw' ) );
+
+    return $response;
+}
+
+// In the enqueue function, we need to localize the script to pass REST info
 function tahlilgar_analyzer_localize_scripts( $handle ) {
     if ( $handle === 'tahlilgar-form-builder-init' ) {
         wp_localize_script(
             'tahlilgar-form-builder-init',
             'tahlilgar_form_builder',
             array(
-                'ajax_url' => admin_url( 'admin-ajax.php' ),
-                'nonce'    => wp_create_nonce( 'save_tahlilgar_form' ) // Action name must match the AJAX action
+                // get_rest_url provides the root, e.g., https://example.com/wp-json/
+                'rest_url' => get_rest_url( null, 'tahlilgar/v1/forms' ),
+                'nonce'    => wp_create_nonce( 'wp_rest' ) // Standard nonce for REST API
             )
         );
     }
@@ -218,6 +245,8 @@ function tahlilgar_analyzer_localize_scripts( $handle ) {
 // Hook into wp_enqueue_scripts to localize
 add_action( 'wp_enqueue_scripts', function() {
     if ( is_page( 'form-builder' ) ) {
+        // Enqueue WP API scripts to handle nonce automatically
+        wp_enqueue_script( 'wp-api' );
         // Localize the script only on the form builder page
         tahlilgar_analyzer_localize_scripts('tahlilgar-form-builder-init');
     }

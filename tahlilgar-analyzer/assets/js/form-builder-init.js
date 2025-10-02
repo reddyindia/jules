@@ -11,11 +11,33 @@ jQuery(document).ready(function($) {
             locale: 'fa-IR',
             location: 'https://formbuilder.online/assets/lang/',
         },
-        disabledActionButtons: ['data', 'save', 'clear'],
+        disabledActionButtons: ['data', 'save'],
+
+        // Updated list of controls including our new custom fields
         controlOrder: [
-            'header', 'paragraph', 'text', 'textarea', 'number', 'select',
-            'checkbox-group', 'radio-group', 'date', 'file', 'autocomplete', 'button'
+            'welcomePage',
+            'fieldGroup',
+            'staticText',
+            'validatedText',
+            'textarea',
+            'number',
+            'select',
+            'checkbox-group',
+            'radio-group',
+            'ratingScale',
+            'rankingList',
+            'date',
+            'file',
+            'autocomplete',
+            'readOnlyText', // Calculated Variable field
+            'hidden',       // Hidden Info field
+            'button',
+            'endPage'
         ],
+
+        // We remove replaceFields to avoid ambiguity and rely on controlOrder
+        // for the definitive list of available fields.
+
         messages: {
             clearAllMessage: 'آیا از پاک کردن تمام فیلدها مطمئن هستید؟',
             clearAll: 'پاک کردن همه',
@@ -28,10 +50,10 @@ jQuery(document).ready(function($) {
 
     const saveBtn = document.getElementById('save-form-btn');
     if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
+        saveBtn.addEventListener('click', async function() {
             const formJSON = formBuilder.actions.getData('json');
 
-            if (!formJSON || formJSON.length === 2) { // "[]" is 2 chars
+            if (!formJSON || formJSON.length <= 2) {
                 alert('فرم خالی است. لطفاً حداقل یک فیلد اضافه کنید.');
                 return;
             }
@@ -45,33 +67,35 @@ jQuery(document).ready(function($) {
             saveBtn.disabled = true;
             saveBtn.textContent = 'در حال ذخیره...';
 
-            $.ajax({
-                url: tahlilgar_form_builder.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'save_tahlilgar_form',
-                    security: tahlilgar_form_builder.nonce,
-                    form_data: formJSON,
-                    form_title: formTitle
-                },
-                success: function(response) {
-                    if (response.success) {
-                        alert('فرم با موفقیت ذخیره شد! شناسه پست: ' + response.data.post_id);
-                        // Optionally, redirect to an "edit" page or clear the builder
-                        // formBuilder.actions.clearFields();
-                    } else {
-                        alert('خطا در ذخیره‌سازی فرم: ' + response.data);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', status, error);
-                    alert('یک خطای ناشناخته در هنگام ارتباط با سرور رخ داد.');
-                },
-                complete: function() {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'ذخیره فرم';
+            try {
+                const response = await fetch(tahlilgar_form_builder.rest_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': tahlilgar_form_builder.nonce
+                    },
+                    body: JSON.stringify({
+                        form_title: formTitle,
+                        form_data: JSON.parse(formJSON)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('فرم با موفقیت ذخیره شد! شناسه پست: ' + data.post_id);
+                } else {
+                    const errorMessage = data.message || 'یک خطای ناشناخته رخ داد.';
+                    alert('خطا در ذخیره‌سازی فرم: ' + errorMessage);
                 }
-            });
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                alert('یک خطای ناشناخته در هنگام ارتباط با سرور رخ داد.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'ذخیره فرم';
+            }
         });
     }
 });
