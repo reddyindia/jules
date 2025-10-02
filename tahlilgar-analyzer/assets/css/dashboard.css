@@ -70,12 +70,40 @@
     box-shadow: 2px 0 15px var(--shadow-color);
     display: flex;
     flex-direction: column;
-    transition: margin-right 0.4s ease-in-out, transform 0.4s ease-in-out;
+    transition: width 0.3s ease-in-out;
     z-index: 1000;
 }
 
 .sidebar.collapsed {
-    margin-right: -260px;
+    width: 80px;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar.collapsed .brand-logo,
+.sidebar.collapsed .menu-item a .text,
+.sidebar.collapsed .sidebar-footer .text,
+.sidebar.collapsed #sidebar-toggle-close {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .menu-item a {
+    justify-content: center;
+    padding: 15px 10px;
+}
+
+.sidebar.collapsed .menu-item a .icon {
+    margin: 0;
+    font-size: 24px;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    text-align: center;
 }
 
 .sidebar-header {
@@ -84,6 +112,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
+    transition: justify-content 0.3s ease;
 }
 
 .brand-logo {
@@ -95,6 +124,7 @@
     -webkit-text-fill-color: transparent;
     animation: gradient-animation 5s ease infinite;
     background-size: 200% 200%;
+    transition: opacity 0.2s ease;
 }
 
 .sidebar-menu {
@@ -119,12 +149,13 @@
 .menu-item a .icon {
     font-size: 20px;
     margin-left: 15px;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .menu-item a .text {
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease, width 0.1s ease;
+    white-space: nowrap;
 }
 
 .menu-item.active a, .menu-item a:hover {

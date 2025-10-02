@@ -64,4 +64,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (themeSwitch) {
         themeSwitch.addEventListener('change', handleThemeChange);
     }
+
+    // --- Auto-collapse sidebar on form builder page ---
+    if (body.classList.contains('page-template-template-form-builder')) {
+        if (window.innerWidth > 768) { // Only on desktop
+           sidebar.classList.add('collapsed');
+        }
+    }
 });

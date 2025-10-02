@@ -122,6 +122,14 @@ function tahlilgar_analyzer_enqueue_assets() {
             'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.css'
         );
 
+        // Custom theme for the form builder
+        wp_enqueue_style(
+            'tahlilgar-form-builder-theme',
+            plugin_dir_url( __FILE__ ) . 'assets/css/form-builder-theme.css',
+            array( 'tahlilgar-dashboard-style', 'form-builder-style' ), // Depends on dashboard and builder styles
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/form-builder-theme.css' )
+        );
+
         // formBuilder JS from CDN
         wp_enqueue_script(
             'form-builder-script',
@@ -172,6 +180,26 @@ function tahlilgar_analyzer_register_form_cpt() {
 }
 add_action( 'init', 'tahlilgar_analyzer_register_form_cpt' );
 
+/**
+ * Register a custom post type for submissions.
+ */
+function tahlilgar_analyzer_register_submission_cpt() {
+    $args = array(
+        'public'      => false,
+        'show_ui'     => true,
+        'label'       => __( 'Submissions', 'tahlilgar-analyzer' ),
+        'labels'      => array(
+            'name'          => __( 'Submissions', 'tahlilgar-analyzer' ),
+            'singular_name' => __( 'Submission', 'tahlilgar-analyzer' ),
+        ),
+        'supports'    => array( 'title', 'editor', 'author' ),
+        'menu_icon'   => 'dashicons-inbox',
+        'show_in_menu'=> 'edit.php?post_type=tahlilgar_form', // Show under "Tahlilgar Forms" menu
+    );
+    register_post_type( 'tahlilgar_submission', $args );
+}
+add_action( 'init', 'tahlilgar_analyzer_register_submission_cpt' );
+
 
 /**
  * Register custom REST API endpoint for saving forms.
@@ -193,8 +221,64 @@ function tahlilgar_analyzer_register_rest_routes() {
             ),
         ),
     ) );
+
+    register_rest_route( 'tahlilgar/v1', '/submissions/(?P<id>\\d+)', array(
+        'methods'             => WP_REST_Server::CREATABLE,
+        'callback'            => 'tahlilgar_analyzer_save_submission_rest_handler',
+        'permission_callback' => '__return_true', // Anyone can submit a form
+        'args' => array(
+            'id' => array(
+                'validate_callback' => function($param) { return is_numeric( $param ); }
+            ),
+        ),
+    ) );
 }
 add_action( 'rest_api_init', 'tahlilgar_analyzer_register_rest_routes' );
+
+/**
+ * REST API handler for saving a form submission.
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+function tahlilgar_analyzer_save_submission_rest_handler( WP_REST_Request $request ) {
+    $form_id = (int) $request['id'];
+    $submission_data = $request->get_json_params();
+
+    if ( empty( $submission_data ) ) {
+        return new WP_Error( 'no_data', 'No submission data received.', array( 'status' => 400 ) );
+    }
+
+    // Create a title for the submission
+    $form_title = get_the_title( $form_id );
+    $submission_title = sprintf( 'پاسخ برای فرم "%s" - %s', $form_title, wp_date( 'Y-m-d H:i:s' ) );
+
+    // Format the submission data for storage in post_content
+    $content = '';
+    foreach ( $submission_data as $field ) {
+        if ( ! isset( $field['name'] ) || ! isset( $field['label'] ) || ! isset( $field['value'] ) ) {
+            continue;
+        }
+        $label = sanitize_text_field( $field['label'] );
+        $value = is_array($field['value']) ? implode(', ', array_map('sanitize_text_field', $field['value'])) : sanitize_textarea_field( $field['value'] );
+        $content .= "<strong>" . esc_html( $label ) . ":</strong>\n";
+        $content .= esc_html( $value ) . "\n\n";
+    }
+
+    $post_id = wp_insert_post( array(
+        'post_title'   => $submission_title,
+        'post_content' => $content,
+        'post_status'  => 'publish',
+        'post_type'    => 'tahlilgar_submission',
+        'post_parent'  => $form_id, // Link submission to the form
+    ) );
+
+    if ( is_wp_error( $post_id ) ) {
+        return new WP_Error( 'save_error', $post_id->get_error_message(), array( 'status' => 500 ) );
+    }
+
+    return new WP_REST_Response( array( 'success' => true, 'message' => 'Submission received successfully!' ), 200 );
+}
 
 /**
  * REST API handler for saving the form.
@@ -251,3 +335,56 @@ add_action( 'wp_enqueue_scripts', function() {
         tahlilgar_analyzer_localize_scripts('tahlilgar-form-builder-init');
     }
 });
+
+/**
+ * Shortcode handler for displaying a form.
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string The HTML output for the form.
+ */
+function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
+    $atts = shortcode_atts( array(
+        'id' => 0,
+    ), $atts, 'tahlilgar_form' );
+
+    $form_id = intval( $atts['id'] );
+
+    if ( ! $form_id ) {
+        return '<p style="color: red;">' . __( 'Error: Form ID is not specified.', 'tahlilgar-analyzer' ) . '</p>';
+    }
+
+    $form_post = get_post( $form_id );
+
+    if ( ! $form_post || 'tahlilgar_form' !== $form_post->post_type ) {
+        return '<p style="color: red;">' . __( 'Error: Form not found.', 'tahlilgar-analyzer' ) . '</p>';
+    }
+
+    // Enqueue form-render assets
+    wp_enqueue_script(
+        'form-render-js',
+        'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-render.min.js',
+        array( 'jquery' ),
+        '3.21.0',
+        true
+    );
+
+    wp_enqueue_script(
+        'tahlilgar-form-renderer-init',
+        plugin_dir_url( __FILE__ ) . 'assets/js/form-renderer-init.js',
+        array( 'form-render-js' ),
+        filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-renderer-init.js' ),
+        true
+    );
+
+    // Pass form data to the script
+    $form_data = json_decode( $form_post->post_content, true );
+    wp_localize_script( 'tahlilgar-form-renderer-init', 'tahlilgar_renderer_data', array(
+        'form_id'        => $form_id,
+        'form_json'      => $form_data,
+        'submission_url' => get_rest_url( null, 'tahlilgar/v1/submissions/' . $form_id ),
+        'nonce'          => wp_create_nonce( 'wp_rest' )
+    ) );
+
+    return '<div id="tahlilgar-form-render-' . esc_attr( $form_id ) . '" class="tahlilgar-form-render-area"></div>';
+}
+add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
