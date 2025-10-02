@@ -128,8 +128,7 @@ function tahlilgar_analyzer_enqueue_assets() {
         wp_enqueue_style( 'form-builder-style', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.css' );
         wp_enqueue_style('tahlilgar-form-builder-theme', plugin_dir_url( __FILE__ ) . 'assets/css/form-builder-theme.css', array( 'tahlilgar-dashboard-style', 'form-builder-style' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/form-builder-theme.css' ));
         wp_enqueue_script( 'form-builder-script', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-sortable' ), '3.21.0', true );
-        wp_enqueue_script('tahlilgar-form-builder-custom-fields', plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-custom-fields.js', array( 'form-builder-script' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-custom-fields.js' ), true);
-        wp_enqueue_script('tahlilgar-form-builder-init', plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-init.js', array( 'form-builder-script', 'tahlilgar-form-builder-custom-fields', 'wp-api' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-init.js' ), true);
+        wp_enqueue_script('tahlilgar-form-builder-loader', plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-loader.js', array( 'form-builder-script', 'wp-api' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-loader.js' ), true);
     }
 
     // Form management specific assets
@@ -488,7 +487,7 @@ add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
 
 // --- GitHub Plugin Updater ---
 // Conditionally load the updater only if the library files exist.
-$puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+$puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker-5.6/plugin-update-checker.php';
 if ( file_exists( $puc_file ) ) {
     require_once $puc_file;
     $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
