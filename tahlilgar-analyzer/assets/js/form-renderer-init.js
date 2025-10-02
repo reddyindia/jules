@@ -35,22 +35,7 @@ jQuery(document).ready(function($) {
                 field: `<fieldset class="tahlilgar-question-group"><legend>${fieldData.label || ''}</legend></fieldset>`
             };
         },
-        ranking: function(fieldData) {
-             // This is a placeholder render. A real implementation would need JS for drag-drop.
-            let options = '';
-            if (fieldData.values) {
-                fieldData.values.forEach(option => {
-                    options += `<li class="list-group-item">${option.label}</li>`;
-                });
-            }
-            return {
-                field: `<div class="tahlilgar-ranking">
-                            <p>${fieldData.label || ''}</p>
-                            <ul class="list-group">${options}</ul>
-                            <input type="hidden" name="${fieldData.name}" value="">
-                        </div>`
-            };
-        }
+        // The ranking field has been removed for now.
     };
 
     // Render the form

@@ -10,7 +10,6 @@ jQuery(document).ready(function($) {
                         // Custom Fields
                         welcome_page: 'صفحه خوش‌آمدگویی',
                         question_group: 'گروه سوال',
-                        ranking: 'رتبه‌بندی',
                         end_page: 'صفحه پایانی',
                         // Standard Fields
                         starRating: 'امتیازدهی',
@@ -33,19 +32,43 @@ jQuery(document).ready(function($) {
             // Disable default action buttons
             disabledActionButtons: ['data', 'save', 'clear'],
 
-            // Define the exact fields to be used, replacing the defaults
-            replaceFields: [
-                { type: 'welcome_page', icon: '👋' },
-                { type: 'text' },
-                { type: 'radio-group' },
-                { type: 'textarea' },
-                { type: 'question_group', icon: '❓' },
-                { type: 'select' },
-                { type: 'starRating' },
-                { type: 'ranking', icon: '📊' },
-                { type: 'paragraph' },
-                { type: 'file' },
-                { type: 'end_page', icon: '🏁' },
+            // Disable unwanted default fields instead of replacing all of them
+            disableFields: [
+                'autocomplete',
+                'button',
+                'hidden',
+                'header',
+                'checkbox-group',
+                'date',
+                'number'
+            ],
+
+            // Add new custom fields
+            fields: [
+                {
+                    label: 'صفحه خوش‌آمدگویی',
+                    type: 'welcome_page',
+                    icon: '👋',
+                    attrs: {
+                        description: { label: 'توضیحات', type: 'textarea' }
+                    }
+                },
+                {
+                    label: 'گروه سوال',
+                    type: 'question_group',
+                    icon: '❓',
+                    attrs: {
+                         description: { label: 'توضیحات', type: 'textarea' }
+                    }
+                },
+                {
+                    label: 'صفحه پایانی',
+                    type: 'end_page',
+                    icon: '🏁',
+                    attrs: {
+                        description: { label: 'توضیحات', type: 'textarea' }
+                    }
+                }
             ],
 
             // Define basic templates for custom fields
@@ -53,23 +76,6 @@ jQuery(document).ready(function($) {
                 welcome_page: fieldData => ({ field: `<div id="${fieldData.name}" class="welcome-page-template"></div>` }),
                 end_page: fieldData => ({ field: `<div id="${fieldData.name}" class="end-page-template"></div>` }),
                 question_group: fieldData => ({ field: `<fieldset id="${fieldData.name}" class="question-group-template"><legend>${fieldData.label}</legend></fieldset>` }),
-                ranking: fieldData => ({ field: `<div id="${fieldData.name}" class="ranking-template"></div>` }),
-            },
-
-            // Define user attributes for custom fields (adds them to settings panel)
-            typeUserAttrs: {
-                welcome_page: {
-                    description: { label: 'توضیحات', type: 'textarea' }
-                },
-                end_page: {
-                    description: { label: 'توضیحات', type: 'textarea' }
-                },
-                question_group: {
-                    description: { label: 'توضیحات', type: 'textarea' }
-                },
-                ranking: {
-                    values: { label: 'گزینه‌های رتبه‌بندی', type: 'option' }
-                }
             },
 
             // Disable unnecessary attributes for a cleaner interface
@@ -77,14 +83,13 @@ jQuery(document).ready(function($) {
                 'welcome_page': ['name', 'required', 'placeholder', 'className', 'access', 'value', 'subtype'],
                 'end_page': ['name', 'required', 'placeholder', 'className', 'access', 'value', 'subtype'],
                 'question_group': ['name', 'required', 'placeholder', 'className', 'access', 'value'],
-                'ranking': ['name', 'required', 'placeholder', 'className', 'access', 'value'],
-                'paragraph': ['name', 'className', 'access', 'subtype'],
+                'paragraph': ['name', 'className', 'access', 'subtype', 'required'],
                 'starRating': ['name', 'required', 'description', 'access', 'className'],
-                'file': ['name', 'description', 'access', 'subtype', 'multiple'],
-                'text': ['name', 'access', 'subtype', 'maxlength'],
-                'textarea': ['name', 'access', 'subtype', 'maxlength', 'rows'],
-                'select': ['name', 'access', 'multiple'],
-                'radio-group': ['name', 'access', 'other', 'inline'],
+                'file': ['name', 'description', 'access', 'subtype', 'multiple', 'placeholder'],
+                'text': ['name', 'access', 'subtype', 'maxlength', 'className'],
+                'textarea': ['name', 'access', 'subtype', 'maxlength', 'rows', 'className'],
+                'select': ['name', 'access', 'multiple', 'className'],
+                'radio-group': ['name', 'access', 'other', 'inline', 'className'],
             },
         };
 
@@ -97,7 +102,7 @@ jQuery(document).ready(function($) {
                 statusDiv.text('فرم با موفقیت ذخیره شد!').css('color', 'green');
                 setTimeout(function() {
                     const managementUrl = new URL(window.location.href);
-                    managementUrl.pathname = '/form-management'; // Assumes this page exists
+                    managementUrl.pathname = '/form-management';
                     window.location.href = managementUrl.href;
                 }, 1500);
             }
@@ -131,7 +136,7 @@ jQuery(document).ready(function($) {
                 },
                 values: {
                     form_title: formTitle,
-                    form_data: formData // HTMX will handle the encoding
+                    form_data: formData
                 }
             });
         });

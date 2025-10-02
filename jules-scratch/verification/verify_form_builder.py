@@ -22,22 +22,25 @@ def run_verification(playwright):
         expect(page).to_have_title("Form Builder – تحلیلگر")
 
         # 2. Assert: Check for the custom fields in the toolbox
-        # The fields are inside a div with class 'form-builder-fields'
         toolbox = page.locator(".form-builder-fields")
 
-        # Check for some of the new custom tools
+        # Check for our new custom tools
         expect(toolbox.locator('li[data-type="welcome_page"]')).to_be_visible()
         expect(toolbox.locator('li[data-type="question_group"]')).to_be_visible()
-        expect(toolbox.locator('li[data-type="ranking"]')).to_be_visible()
-        expect(toolbox.locator('li[data-type="end_page"]')).to_be_visible()
+
+        # Check for the starRating field that was causing the error
+        expect(toolbox.locator('li[data-type="starRating"]')).to_be_visible()
 
         # Check that a default tool has been removed
         expect(toolbox.locator('li[data-type="autocomplete"]')).not_to_be_visible()
 
+        # Check that the ranking field is no longer present
+        expect(toolbox.locator('li[data-type="ranking"]')).not_to_be_visible()
+
         print("Frontend verification checks passed successfully.")
 
         # 3. Screenshot: Capture the final result for visual verification.
-        screenshot_path = "jules-scratch/verification/form_builder_verification.png"
+        screenshot_path = "jules-scratch/verification/form_builder_verification_fixed.png"
         page.screenshot(path=screenshot_path)
         print(f"Screenshot saved to {screenshot_path}")
 
