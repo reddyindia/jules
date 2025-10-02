@@ -13,19 +13,26 @@ jQuery(document).ready(function($) {
         },
         disabledActionButtons: ['data', 'save'],
 
-        // The final, precise list of tools as requested by the user.
+        // For this test, we only show the new shortText field.
         controlOrder: [
-            'welcomePage',
-            'shortText',
-            'multipleChoice',
-            'longText',
-            'questionGroup',
-            'dropdownList',
-            'ratingScale',
-            'rankingList',
-            'staticText',
-            'fileUpload',
-            'endPage'
+            'shortText'
+        ],
+
+        disableFields: [ // Disable all default fields to ensure only ours is used.
+            'autocomplete',
+            'button',
+            'checkbox-group',
+            'date',
+            'file',
+            'header',
+            'hidden',
+            'number',
+            'paragraph',
+            'radio-group',
+            'select',
+            'starRating',
+            'text',
+            'textarea',
         ],
 
         messages: {
@@ -41,19 +48,19 @@ jQuery(document).ready(function($) {
     const saveBtn = document.getElementById('save-form-btn');
     if (saveBtn) {
         saveBtn.addEventListener('click', async function() {
-            const formJSON = formBuilder.actions.getData('json');
-
-            if (!formJSON || formJSON.length <= 2) {
-                alert('فرم خالی است. لطفاً حداقل یک فیلد اضافه کنید.');
-                return;
-            }
-
             const formTitleInput = document.getElementById('form-title-input');
             const formTitle = formTitleInput.value.trim();
 
             if (formTitle === '') {
                 alert('لطفاً یک نام برای فرم خود وارد کنید.');
                 formTitleInput.focus();
+                return;
+            }
+
+            const formJSON = formBuilder.actions.getData('json');
+
+            if (!formJSON || formJSON.length <= 2) {
+                alert('فرم خالی است. لطفاً حداقل یک فیلد اضافه کنید.');
                 return;
             }
 

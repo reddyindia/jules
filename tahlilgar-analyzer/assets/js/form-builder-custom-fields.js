@@ -4,163 +4,72 @@
     if (typeof $.fn.formBuilder === 'undefined') { return; }
 
     const registerField = $.fn.formBuilder.registerField;
-    const I18N = $.fn.formBuilder.languages['fa-IR'];
 
-    // --- 1. Welcome Page ---
-    registerField('welcomePage', {
-        name: 'welcomePage',
-        label: 'صفحه خوش‌آمدگویی',
-        icon: '👋',
-        extends: 'header',
-        config: { label: 'به پرسشنامه ما خوش آمدید!', subtype: 'h1' }
-    });
-
-    // --- 2. Short Text ---
+    // --- 1. The new, fully configurable Short Text field ---
     registerField('shortText', {
         name: 'shortText',
         label: 'متن کوتاه',
         icon: 'T',
-        extends: 'text', // Extends the base text field to get required, placeholder, etc. for free.
-        onrender: function(event) {
-            const field = this;
-            const validationTypes = {
-                '': 'هیچکدام', 'text': 'متن', 'email': 'ایمیل', 'url': 'آدرس سایت', 'tel': 'تلفن', 'number': 'عدد', 'date': 'تاریخ'
-            };
-            // Create a dropdown for validation type
-            const dropdownLabel = field.markup('label', 'نوع اعتبارسنجی', { className: 'prop-label' });
-            const options = Object.entries(validationTypes).map(([value, label]) =>
-                field.markup('option', label, { value, selected: value === (field.config.attrs.type || 'text') })
-            );
-            const select = field.markup('select', options, { className: 'prop-value', name: 'type' });
-            $(select).on('change', e => { field.config.attrs.type = e.target.value; });
 
-            // Inject the new setting into the edit panel
-            const placeholderInput = event.target.querySelector('.fld-placeholder-wrap');
-            if (placeholderInput) {
-                placeholderInput.after(field.markup('div', [dropdownLabel, select], { className: 'form-group prop-wrap' }));
-            }
-        }
-    });
+        // The `build` function defines the field's appearance in the form builder stage.
+        build: function(value) {
+            const { label, description, placeholder } = this.config.attrs;
+            const input = this.markup('input', null, {
+                type: 'text',
+                value: value,
+                placeholder: placeholder,
+                className: 'fld-input'
+            });
+            const labelMarkup = this.markup('label', label, { className: 'fld-label' });
+            const helpText = this.markup('span', description, { className: 'tooltip-element', tooltip: description });
 
-    // --- 3. Multiple Choice ---
-    registerField('multipleChoice', {
-        name: 'multipleChoice',
-        label: 'چند‌گزینه‌ای',
-        icon: '☑️',
-        extends: 'checkbox-group' // The default options editor is perfect for this.
-    });
-
-    // --- 4. Long Text ---
-    registerField('longText', {
-        name: 'longText',
-        label: 'متن بلند',
-        icon: '📝',
-        extends: 'textarea' // The default is fine, it has rows, required, etc.
-    });
-
-    // --- 5. Question Group ---
-    registerField('questionGroup', {
-        name: 'questionGroup',
-        label: 'گروه سوال',
-        icon: '🗂️',
-        extends: 'header',
-        config: { label: 'عنوان گروه', subtype: 'h3' }
-    });
-
-    // --- 6. Dropdown List ---
-    registerField('dropdownList', {
-        name: 'dropdownList',
-        label: 'لیست کشویی',
-        icon: '🔻',
-        extends: 'select' // The default options editor is perfect.
-    });
-
-    // --- 7. Rating ---
-    registerField('ratingScale', {
-        name: 'ratingScale',
-        label: 'درجه‌بندی',
-        icon: '⭐',
-        extends: 'radio-group', // Use radio-group as a base for data structure
-        config: {
-            label: 'امتیاز شما چیست؟',
-            inline: true, // Display horizontally
-            options: [ // Default to 5 stars
-                { label: '★', value: '1' }, { label: '★', value: '2' }, { label: '★', value: '3' }, { label: '★', value: '4' }, { label: '★', value: '5' }
-            ]
+            return this.markup('div', [labelMarkup, helpText, input], { className: 'form-group short-text-field' });
         },
+
+        // The `onrender` function defines the settings/edit panel for the field.
         onrender: function(event) {
             const field = this;
+            const config = field.config;
+            config.attrs = config.attrs || {}; // Ensure attrs object exists
+
             const settingsPanel = $(event.target);
+            settingsPanel.empty(); // Clear default settings
 
-            // Hide the standard options editor since we're creating our own UI for it.
-            settingsPanel.find('.fld-options-wrap').hide();
+            // --- Settings Fields ---
 
-            // Create a number input to control the star count
-            const maxLabel = field.markup('label', 'تعداد ستاره (۱ تا ۱۰)', { className: 'prop-label' });
-            const maxInput = field.markup('input', null, {
-                type: 'number',
-                value: field.config.options.length,
-                min: 1,
-                max: 10,
-                className: 'prop-value'
-            });
+            // 1. Label (عنوان)
+            const labelInput = field.markup('input', null, { type: 'text', name: 'label', value: config.label, className: 'prop-value' });
+            $(labelInput).on('input', e => { config.label = e.target.value; });
+            const labelLabel = field.markup('label', 'عنوان فیلد', { className: 'prop-label' });
+            settingsPanel.append(field.markup('div', [labelLabel, labelInput], { className: 'form-group prop-wrap' }));
 
-            // When the number changes, update the 'options' config array
-            $(maxInput).on('input', function(e) {
-                const count = Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 0));
-                const newOptions = [];
-                for (let i = 1; i <= count; i++) {
-                    newOptions.push({ label: '★', value: String(i), selected: false });
-                }
-                field.config.options = newOptions;
-            });
+            // 2. Help Text (متن راهنما)
+            const helpInput = field.markup('input', null, { type: 'text', name: 'description', value: config.description, className: 'prop-value' });
+            $(helpInput).on('input', e => { config.description = e.target.value; });
+            const helpLabel = field.markup('label', 'متن راهنما (اختیاری)', { className: 'prop-label' });
+            settingsPanel.append(field.markup('div', [helpLabel, helpInput], { className: 'form-group prop-wrap' }));
 
-            // Add the new setting to the panel
-            const customSetting = field.markup('div', [maxLabel, maxInput], { className: 'form-group prop-wrap' });
-            settingsPanel.find('.fld-inline-wrap').after(customSetting);
-        }
-    });
+            // 3. Placeholder (متن جایگزین)
+            const placeholderInput = field.markup('input', null, { type: 'text', name: 'placeholder', value: config.attrs.placeholder, className: 'prop-value' });
+            $(placeholderInput).on('input', e => { config.attrs.placeholder = e.target.value; });
+            const placeholderLabel = field.markup('label', 'متن جایگزین (Placeholder)', { className: 'prop-label' });
+            settingsPanel.append(field.markup('div', [placeholderLabel, placeholderInput], { className: 'form-group prop-wrap' }));
 
-    // --- 8. Ranking ---
-    registerField('rankingList', {
-        name: 'rankingList',
-        label: 'اولویت‌دهی',
-        icon: '↕️',
-        extends: 'checkbox-group', // Use this to get the options editor
-        config: {
-            label: 'آیتم‌ها را اولویت‌بندی کنید',
-            description: 'کاربران گزینه‌ها را با کشیدن و رها کردن مرتب خواهند کرد.'
-        },
-        onrender: function(event) {
-            // Hide the "select" checkbox for each option, as it's not relevant for ranking.
-            $(event.target).find('.option-selected').hide();
-        }
-    });
+            // 4. Required (اجباری بودن)
+            const requiredInput = field.markup('input', null, { type: 'checkbox', name: 'required', checked: config.required, className: 'prop-value' });
+            $(requiredInput).on('change', e => { config.required = e.target.checked; });
+            const requiredLabel = field.markup('label', 'این فیلد اجباری است', { className: 'prop-label' });
+            settingsPanel.append(field.markup('div', [requiredLabel, requiredInput], { className: 'form-group prop-wrap' }));
 
-    // --- 9. Static Text ---
-    registerField('staticText', {
-        name: 'staticText',
-        label: 'متن بدون پاسخ',
-        icon: 'ℹ️',
-        extends: 'paragraph'
-    });
-
-    // --- 10. File Upload ---
-    registerField('fileUpload', {
-        name: 'fileUpload',
-        label: 'آپلود فایل',
-        icon: '📎',
-        extends: 'file'
-    });
-
-    // --- 11. End Page ---
-    registerField('endPage', {
-        name: 'endPage',
-        label: 'صفحه پایان',
-        icon: '🏁',
-        extends: 'paragraph',
-        config: {
-            label: 'از وقتی که گذاشتید سپاسگزاریم!',
+            // 5. Validation Type (نوع اعتبارسنجی)
+            const validationTypes = { '': 'هیچکدام', 'email': 'ایمیل', 'url': 'آدرس سایت', 'tel': 'تلفن', 'number': 'عدد' };
+            const validationLabel = field.markup('label', 'نوع اعتبارسنجی', { className: 'prop-label' });
+            const validationOptions = Object.entries(validationTypes).map(([value, label]) =>
+                field.markup('option', label, { value, selected: value === config.attrs.type })
+            );
+            const validationSelect = field.markup('select', validationOptions, { name: 'type', className: 'prop-value' });
+            $(validationSelect).on('change', e => { config.attrs.type = e.target.value; });
+            settingsPanel.append(field.markup('div', [validationLabel, validationSelect], { className: 'form-group prop-wrap' }));
         }
     });
 
