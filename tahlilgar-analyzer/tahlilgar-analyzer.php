@@ -3,7 +3,7 @@
  * Plugin Name: تحلیلگر
  * Plugin URI: https://example.com/
  * Description: A simple WordPress plugin.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Your Name
  * Author URI: https://example.com/
  */
@@ -578,7 +578,7 @@ function tahlilgar_analyzer_initialize_updater() {
     );
 
     // The branch that contains the plugin.
-    $updateChecker->setBranch('create-tahlilgar-analyzer-plugin');
+    $updateChecker->setBranch('main');
 
     // The subdirectory that contains the plugin files.
     $updateChecker->setPluginSubdirectory('tahlilgar-analyzer');
