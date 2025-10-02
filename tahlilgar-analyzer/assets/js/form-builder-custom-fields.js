@@ -222,4 +222,148 @@
         extends: 'file' // Default settings for file type and multiple are sufficient
     });
 
+    // --- 2. Welcome Page ---
+    registerField('welcomePage', {
+        name: 'welcomePage',
+        label: 'صفحه خوش‌آمدگویی',
+        icon: '👋',
+        extends: 'header',
+        config: {
+            label: 'به پرسشنامه ما خوش آمدید!',
+            subtype: 'h1'
+        },
+        onrender: (event) => {
+            // Hide unnecessary default settings to keep the panel clean
+            $(event.target).find('.fld-subtype-wrap, .fld-className-wrap, .fld-name-wrap').hide();
+        }
+    });
+
+    // --- 3. Long Text ---
+    registerField('longText', {
+        name: 'longText',
+        label: 'متن بلند',
+        icon: '📝',
+        extends: 'textarea', // The default textarea has all the required settings (label, help, placeholder, required, rows)
+        config: {
+            label: 'پاسخ خود را اینجا بنویسید'
+        }
+    });
+
+    // --- 4. Question Group ---
+    registerField('questionGroup', {
+        name: 'questionGroup',
+        label: 'گروه سوال',
+        icon: '🗂️',
+        extends: 'header',
+        config: {
+            label: 'عنوان گروه',
+            subtype: 'h3'
+        },
+        onrender: (event) => {
+            $(event.target).find('.fld-subtype-wrap, .fld-className-wrap, .fld-name-wrap').hide();
+        }
+    });
+
+    // --- 5. Static Text ---
+    registerField('staticText', {
+        name: 'staticText',
+        label: 'متن بدون پاسخ',
+        icon: 'ℹ️',
+        extends: 'paragraph',
+        config: {
+            label: 'این یک متن راهنما برای کاربران است.'
+        },
+        onrender: (event) => {
+            $(event.target).find('.fld-className-wrap, .fld-name-wrap').hide();
+        }
+    });
+
+    // --- 6. End Page ---
+    registerField('endPage', {
+        name: 'endPage',
+        label: 'صفحه پایان',
+        icon: '🏁',
+        extends: 'paragraph',
+        config: {
+            label: 'از وقتی که گذاشتید سپاسگزاریم!'
+        },
+        onrender: (event) => {
+            $(event.target).find('.fld-className-wrap, .fld-name-wrap').hide();
+        }
+    });
+
+    // --- 7. Multiple Choice ---
+    registerField('multipleChoice', {
+        name: 'multipleChoice',
+        label: 'چند‌گزینه‌ای',
+        icon: '☑️',
+        extends: 'checkbox-group' // This base field provides the complete options editor.
+    });
+
+    // --- 8. Dropdown List ---
+    registerField('dropdownList', {
+        name: 'dropdownList',
+        label: 'لیست کشویی',
+        icon: '🔻',
+        extends: 'select' // This base field also provides the options editor.
+    });
+
+    // --- 9. Ranking ---
+    registerField('rankingList', {
+        name: 'rankingList',
+        label: 'اولویت‌دهی',
+        icon: '↕️',
+        extends: 'checkbox-group', // Use this to get the options editor.
+        config: {
+            label: 'آیتم‌ها را اولویت‌بندی کنید',
+            description: 'کاربران گزینه‌ها را با کشیدن و رها کردن مرتب خواهند کرد.'
+        },
+        onrender: function(event) {
+            // Hide the "select" checkbox for each option, as it's not relevant for ranking.
+            $(event.target).find('.option-selected').hide();
+            // Also hide the "inline" and "toggle" options which don't apply to ranking lists.
+            $(event.target).find('.fld-inline-wrap, .fld-toggle-wrap').hide();
+        }
+    });
+
+    // --- 10. Rating ---
+    registerField('ratingScale', {
+        name: 'ratingScale',
+        label: 'درجه‌بندی',
+        icon: '⭐',
+        extends: 'radio-group',
+        config: {
+            label: 'امتیاز شما چیست؟',
+            inline: true,
+            options: [
+                { label: '★', value: '1' }, { label: '★', value: '2' }, { label: '★', value: '3' }, { label: '★', value: '4' }, { label: '★', value: '5' }
+            ]
+        },
+        onrender: function(event) {
+            const field = this;
+            const settingsPanel = $(event.target);
+            settingsPanel.find('.fld-options-wrap').hide(); // Hide default options editor
+            const maxLabel = field.markup('label', 'تعداد ستاره (۱ تا ۱۰)', { className: 'prop-label' });
+            const maxInput = field.markup('input', null, { type: 'number', value: field.config.options.length, min: 1, max: 10, className: 'prop-value' });
+            $(maxInput).on('input', function(e) {
+                const count = Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 0));
+                const newOptions = [];
+                for (let i = 1; i <= count; i++) {
+                    newOptions.push({ label: '★', value: String(i), selected: false });
+                }
+                field.config.options = newOptions;
+            });
+            const customSetting = field.markup('div', [maxLabel, maxInput], { className: 'form-group prop-wrap' });
+            settingsPanel.find('.fld-inline-wrap').after(customSetting);
+        }
+    });
+
+    // --- 11. File Upload ---
+    registerField('fileUpload', {
+        name: 'fileUpload',
+        label: 'آپلود فایل',
+        icon: '📎',
+        extends: 'file' // Default settings for file type and multiple are sufficient
+    });
+
 })(jQuery);
