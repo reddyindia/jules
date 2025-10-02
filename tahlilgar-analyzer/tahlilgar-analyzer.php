@@ -3,7 +3,7 @@
  * Plugin Name: تحلیلگر
  * Plugin URI: https://example.com/
  * Description: A simple WordPress plugin.
- * Version: 1.1.3
+ * Version: 1.2.1
  * Author: Your Name
  * Author URI: https://example.com/
  */
@@ -486,11 +486,12 @@ function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
 }
 add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
 
-// --- GitHub Plugin Updater (Temporarily Disabled) ---
-/*
-require plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+// --- GitHub Plugin Updater ---
+require_once plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
 
-$myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
     'https://github.com/reddyindia/jules/',
     __FILE__,
     'tahlilgar-analyzer'
@@ -498,4 +499,3 @@ $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChe
 
 // Set the branch that contains the stable release.
 $myUpdateChecker->setBranch('main');
-*/
