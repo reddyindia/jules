@@ -1,73 +1,45 @@
 jQuery(document).ready(function($) {
-    'use strict';
+    const tableBody = $('#forms-table-body');
+    const loadingMessage = $('#loading-message');
+    const noFormsMessage = $('#no-forms-message');
+    const formsTable = $('#forms-table');
 
-    const container = $('#form-management-table');
-    if (container.length === 0) {
-        return;
-    }
-
-    async function loadForms() {
-        if (typeof tahlilgar_management_data === 'undefined') {
-            container.html('<p style="color: red;">Error: Management data object not found.</p>');
-            return;
-        }
-
-        const { rest_url, nonce } = tahlilgar_management_data;
-
-        try {
-            const response = await fetch(rest_url, {
-                headers: {
-                    'X-WP-Nonce': nonce
+    function fetchForms() {
+        $.ajax({
+            url: tahlilgar_management_data.rest_url,
+            method: 'GET',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', tahlilgar_management_data.nonce);
+            },
+            success: function(forms) {
+                loadingMessage.hide();
+                if (forms && forms.length > 0) {
+                    tableBody.empty(); // Clear existing rows
+                    forms.forEach(function(form) {
+                        const row = `
+                            <tr>
+                                <td>${form.title}</td>
+                                <td><input type="text" value='${form.shortcode}' readonly onfocus="this.select();" style="width: 100%; border: 1px solid #ccc; padding: 5px; background: #f9f9f9;"></td>
+                                <td>${form.submission_count}</td>
+                                <td>${new Date(form.date).toLocaleDateString('fa-IR')}</td>
+                                <td class="actions">
+                                    <a href="${form.results_link}">مشاهده نتایج</a>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.append(row);
+                    });
+                    formsTable.show();
+                } else {
+                    noFormsMessage.show();
                 }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'An unknown error occurred.');
+            },
+            error: function() {
+                loadingMessage.text('خطا در بارگذاری فرم‌ها.').css('color', 'red');
             }
-
-            const forms = await response.json();
-
-            if (forms.length === 0) {
-                container.html('<p>هنوز هیچ فرمی ساخته نشده است. برای شروع، به صفحه «فرم‌ساز» بروید و اولین فرم خود را بسازید.</p>');
-                return;
-            }
-
-            renderFormsTable(forms);
-
-        } catch (error) {
-            console.error('Error loading forms:', error);
-            container.html(`<p style="color: red;">خطا در بارگذاری فرم‌ها: ${error.message}</p>`);
-        }
+        });
     }
 
-    function renderFormsTable(forms) {
-        const table = `
-            <table class="wp-list-table widefat striped">
-                <thead>
-                    <tr>
-                        <th>عنوان فرم</th>
-                        <th>شورت‌کد (برای کپی و استفاده)</th>
-                        <th>تعداد پاسخ‌ها</th>
-                        <th>عملیات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${forms.map(form => `
-                        <tr>
-                            <td><strong>${form.title}</strong><br><small>ایجاد شده در: ${form.date}</small></td>
-                            <td><input type="text" value="${form.shortcode}" readonly onfocus="this.select();" style="width: 100%; text-align: left; direction: ltr; font-family: monospace; padding: 5px;"></td>
-                            <td>${form.submission_count}</td>
-                            <td>
-                                <a href="${form.results_link}" class="button button-primary button-small">مشاهده نتایج</a>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-        container.html(table);
-    }
-
-    loadForms();
+    // Initial fetch
+    fetchForms();
 });

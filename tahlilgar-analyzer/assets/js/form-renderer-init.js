@@ -1,75 +1,63 @@
 jQuery(document).ready(function($) {
-    'use strict';
-
-    if (typeof tahlilgar_renderer_data === 'undefined') {
-        console.error('Form renderer data is not available.');
+    const rendererData = window.tahlilgar_renderer_data;
+    if (!rendererData || !rendererData.form_json) {
+        console.error('Tahlilgar Renderer: Form data is missing.');
         return;
     }
 
-    const { form_id, form_json, submission_url, nonce } = tahlilgar_renderer_data;
-    const renderContainerId = '#tahlilgar-form-render-' + form_id;
-    const $container = $(renderContainerId);
+    const formContainerId = '#tahlilgar-form-render-' + rendererData.form_id;
+    const formContainer = $(formContainerId);
 
-    if ($container.length === 0) {
-        console.error('Form render container not found: ' + renderContainerId);
+    if (formContainer.length === 0) {
+        console.error('Tahlilgar Renderer: Form container not found.');
         return;
     }
 
-    if (!form_json || form_json.length === 0) {
-        $container.html('<p style="color: red;">Form data is empty or invalid.</p>');
-        return;
+    // Render the form
+    const formRenderInstance = formContainer.formRender({
+        formData: rendererData.form_json
+    });
+
+    // Add a submit button if one doesn't exist
+    if (formContainer.find('button[type="submit"]').length === 0) {
+        formContainer.append('<button type="submit" class="tahlilgar-submit-button">ارسال</button>');
     }
 
-    const renderOpts = {
-        formData: form_json,
-    };
+    // Add a div for status messages
+    formContainer.append('<div class="tahlilgar-form-status" style="margin-top: 15px;"></div>');
 
-    const formRenderInstance = $container.formRender(renderOpts);
 
-    // Append a wrapper for the button and messages
-    $container.append(`
-        <div class="form-submission-wrapper">
-            <button type="submit" class="btn btn-primary tahlilgar-submit-btn">ارسال پاسخ</button>
-            <div class="submission-message" style="display:none; margin-top:15px;"></div>
-        </div>
-    `);
-
-    $container.on('click', '.tahlilgar-submit-btn', async function(e) {
+    formContainer.on('submit', function(e) {
         e.preventDefault();
-        const $button = $(this);
-        const $messageDiv = $container.find('.submission-message');
+        const statusDiv = formContainer.find('.tahlilgar-form-status');
+        const submitButton = formContainer.find('button[type="submit"]');
 
-        $button.prop('disabled', true).text('در حال ارسال...');
-        $messageDiv.hide();
+        const userData = formRenderInstance.userData;
 
-        const submissionData = formRenderInstance.userData;
-
-        try {
-            const response = await fetch(submission_url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': nonce
-                },
-                body: JSON.stringify(submissionData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                $messageDiv.css('color', 'green').text('پاسخ شما با موفقیت ثبت شد. سپاسگزاریم!').show();
-                $container.find('form').hide(); // Hide the form on success
-                $button.hide();
-            } else {
-                const errorMessage = data.message || 'یک خطای ناشناخته رخ داد.';
-                $messageDiv.css('color', 'red').text('خطا: ' + errorMessage).show();
-                $button.prop('disabled', false).text('ارسال پاسخ');
-            }
-
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            $messageDiv.css('color', 'red').text('یک خطای ارتباطی با سرور رخ داد. لطفاً دوباره تلاش کنید.').show();
-            $button.prop('disabled', false).text('ارسال پاسخ');
+        if (!userData) {
+            statusDiv.text('لطفاً فرم را پر کنید.').css('color', 'red');
+            return;
         }
+
+        statusDiv.text('در حال ارسال پاسخ...').css('color', 'blue');
+        submitButton.prop('disabled', true);
+
+        $.ajax({
+            url: rendererData.submission_url,
+            method: 'POST',
+            contentType: 'application/json',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-WP-Nonce', rendererData.nonce);
+            },
+            data: JSON.stringify(userData),
+            success: function(response) {
+                formContainer.html('<div class="tahlilgar-form-success">پاسخ شما با موفقیت ثبت شد. متشکریم!</div>');
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'خطایی در هنگام ارسال پاسخ رخ داد.';
+                 statusDiv.text('خطا: ' + errorMsg).css('color', 'red');
+                submitButton.prop('disabled', false);
+            }
+        });
     });
 });

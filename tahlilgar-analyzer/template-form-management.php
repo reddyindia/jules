@@ -1,86 +1,55 @@
 <?php
 /**
- * Template Name: Form Management Template
+ * Template for the Tahlilgar Analyzer Form Management page.
  */
 
-// Redirect to login page if user is not logged in
-if ( ! is_user_logged_in() ) {
-    wp_redirect( get_permalink( get_page_by_path( 'login' ) ) );
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
 }
+
+get_header();
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo( 'charset' ); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php wp_head(); ?>
-</head>
-<body <?php body_class('dashboard-body'); ?>>
 
-    <div id="dashboard-container">
-        <nav id="dashboard-sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h2 class="brand-logo">تحلیلگر</h2>
-                <button id="sidebar-toggle-close" class="sidebar-toggle-btn">&times;</button>
-            </div>
-             <ul class="sidebar-menu">
-                <li class="menu-item"><a href="<?php echo get_permalink( get_page_by_path( 'dashboard' ) ); ?>">
-                    <span class="icon">📊</span><span class="text">داشبورد</span>
-                </a></li>
-                <li class="menu-item"><a href="<?php echo get_permalink( get_page_by_path( 'form-builder' ) ); ?>">
-                    <span class="icon">📝</span><span class="text">فرم‌ساز</span>
-                </a></li>
-                <li class="menu-item active"><a href="#">
-                    <span class="icon">🗂️</span><span class="text">مدیریت فرم‌ها</span>
-                </a></li>
-                 <li class="menu-item"><a href="#">
-                    <span class="icon">📈</span><span class="text">نتایج</span>
-                </a></li>
-                <li class="menu-item"><a href="#">
-                    <span class="icon">⚙️</span><span class="text">تنظیمات</span>
-                </a></li>
-                <li class="menu-item"><a href="#">
-                    <span class="icon">👤</span><span class="text">پروفایل</span>
-                </a></li>
-            </ul>
-            <div class="sidebar-footer">
-                <a href="<?php echo wp_logout_url( get_permalink( get_page_by_path( 'login' ) ) ); ?>" class="logout-link">
-                    <span class="icon">🚪</span><span class="text">خروج</span>
-                </a>
-            </div>
-        </nav>
-
-        <main id="main-content">
-            <header class="main-header">
-                <div class="header-left">
-                    <button id="sidebar-toggle-open" class="sidebar-toggle-btn">☰</button>
-                    <h1>مدیریت فرم‌ها</h1>
-                </div>
-                <div class="header-right">
-                    <a href="<?php echo get_permalink( get_page_by_path( 'form-builder' ) ); ?>" class="button button-primary" style="font-size: 14px; padding: 5px 15px; height: auto; line-height: 1.5;">ساخت فرم جدید</a>
-                    <div class="theme-switcher">
-                        <input type="checkbox" id="theme-switch-checkbox" class="theme-switch-checkbox">
-                        <label for="theme-switch-checkbox" class="theme-switch-label">
-                            <span class="sun">☀️</span>
-                            <span class="moon">🌙</span>
-                        </label>
-                    </div>
-                    <div class="user-profile">
-                        <span><?php echo esc_html( wp_get_current_user()->display_name ); ?></span>
-                        <?php echo get_avatar( get_current_user_id(), 32 ); ?>
-                    </div>
-                </div>
-            </header>
-            <div class="content-area">
-                <div id="form-management-table">
-                    <!-- Form list will be rendered here by JavaScript -->
-                    <p>در حال بارگذاری لیست فرم‌ها...</p>
-                </div>
-            </div>
-        </main>
+<div class="tahlilgar-container">
+    <div class="tahlilgar-sidebar">
+        <div class="logo">
+            <a href="#">تحلیلگر</a>
+        </div>
+        <ul class="tahlilgar-menu">
+            <li><a href="<?php echo esc_url( home_url( '/dashboard' ) ); ?>"><span class="dashicons dashicons-dashboard"></span>داشبورد</a></li>
+            <li class="active"><a href="<?php echo esc_url( home_url( '/form-management' ) ); ?>"><span class="dashicons dashicons-forms"></span>مدیریت فرم‌ها</a></li>
+            <li><a href="<?php echo esc_url( home_url( '/form-builder' ) ); ?>"><span class="dashicons dashicons-plus-alt"></span>ساخت فرم جدید</a></li>
+        </ul>
     </div>
+    <div class="tahlilgar-main-content">
+        <div class="tahlilgar-header">
+            <h1>مدیریت فرم‌ها</h1>
+            <a href="<?php echo esc_url( home_url( '/form-builder' ) ); ?>" class="tahlilgar-button primary">
+                <span class="dashicons dashicons-plus"></span>
+                فرم جدید
+            </a>
+        </div>
+        <div class="tahlilgar-card">
+            <div id="loading-message">در حال بارگذاری فرم‌ها...</div>
+            <div id="no-forms-message" style="display: none;">هیچ فرمی یافت نشد.</div>
+            <table id="forms-table" class="tahlilgar-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>عنوان فرم</th>
+                        <th>شورت‌کد</th>
+                        <th>تعداد پاسخ‌ها</th>
+                        <th>تاریخ ایجاد</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="forms-table-body">
+                    <!-- Form rows will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-    <?php wp_footer(); ?>
-</body>
-</html>
+<?php
+get_footer();
+?>
