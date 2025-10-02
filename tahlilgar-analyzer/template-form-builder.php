@@ -16,9 +16,9 @@ get_header();
             <a href="#">تحلیلگر</a>
         </div>
         <ul class="tahlilgar-menu">
-            <li><a href="<?php echo esc_url( home_url( '/dashboard' ) ); ?>"><span class="dashicons dashicons-dashboard"></span>داشبورد</a></li>
-            <li><a href="<?php echo esc_url( home_url( '/form-management' ) ); ?>"><span class="dashicons dashicons-forms"></span>مدیریت فرم‌ها</a></li>
-            <li class="active"><a href="<?php echo esc_url( home_url( '/form-builder' ) ); ?>"><span class="dashicons dashicons-plus-alt"></span>ساخت فرم جدید</a></li>
+            <li><a href="<?php echo esc_url( ta_get_dashboard_url() ); ?>"><span class="dashicons dashicons-dashboard"></span>داشبورد</a></li>
+            <li><a href="<?php echo esc_url( ta_get_form_management_url() ); ?>"><span class="dashicons dashicons-forms"></span>مدیریت فرم‌ها</a></li>
+            <li class="active"><a href="<?php echo esc_url( ta_get_form_builder_url() ); ?>"><span class="dashicons dashicons-plus-alt"></span>ساخت فرم جدید</a></li>
         </ul>
     </div>
     <div class="tahlilgar-main-content">

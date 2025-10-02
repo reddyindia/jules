@@ -65,7 +65,7 @@ class Tahlilgar_Analyzer {
      * Include required files.
      */
     public function includes() {
-        // Here we will include other classes.
+        include_once TA_PLUGIN_PATH . 'includes/ta-core-functions.php';
     }
 
     /**
@@ -209,8 +209,6 @@ class Tahlilgar_Analyzer {
         $forms_data = array();
 
         if ( $forms_query->have_posts() ) {
-            $results_page_url = get_permalink( get_page_by_path( 'results' ) );
-
             while ( $forms_query->have_posts() ) {
                 $forms_query->the_post();
                 $form_id = get_the_ID();
@@ -223,14 +221,12 @@ class Tahlilgar_Analyzer {
                 ));
                 $submission_count = $submission_query->post_count;
 
-                $results_link = $results_page_url ? add_query_arg( 'form_id', $form_id, $results_page_url ) : '#';
-
                 $forms_data[] = array(
                     'id'          => $form_id,
                     'title'       => get_the_title(),
                     'date'        => get_the_date(),
                     'shortcode'   => '[tahlilgar_form id="' . $form_id . '"]',
-                    'results_link'=> $results_link,
+                    'results_link'=> ta_get_results_url( $form_id ),
                     'submission_count' => $submission_count,
                 );
             }
