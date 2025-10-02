@@ -40,7 +40,6 @@ class Tahlilgar_Analyzer {
      * Tahlilgar_Analyzer Constructor.
      */
     public function __construct() {
-        $this->define_constants();
         $this->includes();
         $this->init_hooks();
         $this->init_updater();
@@ -60,15 +59,6 @@ class Tahlilgar_Analyzer {
             );
             $myUpdateChecker->getVcsApi()->enableReleaseAssets();
         }
-    }
-
-    /**
-     * Define constants.
-     */
-    private function define_constants() {
-        define( 'TA_PLUGIN_FILE', __FILE__ );
-        define( 'TA_PLUGIN_BASENAME', plugin_basename( TA_PLUGIN_FILE ) );
-        define( 'TA_VERSION', '2.0.1' );
     }
 
     /**
