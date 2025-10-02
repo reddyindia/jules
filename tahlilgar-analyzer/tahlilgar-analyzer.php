@@ -486,7 +486,8 @@ function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
 }
 add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
 
-// --- GitHub Plugin Updater ---
+// --- GitHub Plugin Updater (Temporarily Disabled) ---
+/*
 require plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
 
 $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
@@ -497,3 +498,4 @@ $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChe
 
 // Set the branch that contains the stable release.
 $myUpdateChecker->setBranch('main');
+*/
