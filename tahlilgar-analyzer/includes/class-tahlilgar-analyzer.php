@@ -177,6 +177,19 @@ class Tahlilgar_Analyzer {
             return new WP_Error( 'no_data', 'No form data received.', array( 'status' => 400 ) );
         }
 
+        // HTMX sends JSON as a string, so we need to decode it.
+        // Other clients might send a parsed object.
+        if ( is_string( $form_data ) ) {
+            $form_data = json_decode( wp_unslash( $form_data ), true );
+            if ( json_last_error() !== JSON_ERROR_NONE ) {
+                return new WP_Error( 'invalid_json', 'Invalid JSON data received.', array( 'status' => 400 ) );
+            }
+        }
+
+        if ( empty( $form_data ) ) {
+            return new WP_Error( 'no_data', 'No form data received.', array( 'status' => 400 ) );
+        }
+
         $post_id = wp_insert_post( array(
             'post_title'   => $form_title,
             'post_content' => wp_json_encode( $form_data, JSON_UNESCAPED_UNICODE ),
@@ -387,8 +400,9 @@ class Tahlilgar_Analyzer {
         if ( is_page( 'form-builder' ) ) {
             wp_enqueue_style( 'form-builder-style', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.css' );
             wp_enqueue_style('tahlilgar-form-builder-theme', TA_PLUGIN_URL . 'assets/css/form-builder-theme.css', array(), filemtime( TA_PLUGIN_PATH . 'assets/css/form-builder-theme.css' ));
+            wp_enqueue_script( 'htmx-script', TA_PLUGIN_URL . 'assets/js/htmx.min.js', array(), filemtime( TA_PLUGIN_PATH . 'assets/js/htmx.min.js' ), true );
             wp_enqueue_script( 'form-builder-script', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-sortable' ), '3.21.0', true );
-            wp_enqueue_script('tahlilgar-form-builder-loader', TA_PLUGIN_URL . 'assets/js/form-builder-loader.js', array( 'form-builder-script', 'wp-api' ), filemtime( TA_PLUGIN_PATH . 'assets/js/form-builder-loader.js' ), true);
+            wp_enqueue_script('tahlilgar-form-builder-loader', TA_PLUGIN_URL . 'assets/js/form-builder-loader.js', array( 'form-builder-script', 'wp-api', 'htmx-script' ), filemtime( TA_PLUGIN_PATH . 'assets/js/form-builder-loader.js' ), true);
 
             wp_localize_script( 'tahlilgar-form-builder-loader', 'tahlilgar_form_builder', array(
                 'rest_url' => get_rest_url( null, 'tahlilgar/v1/forms' ),

@@ -1,28 +1,118 @@
 jQuery(document).ready(function($) {
     if (typeof jQuery.fn.formBuilder === 'function') {
         const options = {
+            // Internationalization options
             i18n: {
                 locale: 'fa-IR',
                 location: 'https://cdn.jsdelivr.net/gh/dr-pro/form-builder-translations/lang/',
+                override: {
+                    'fa-IR': {
+                        // Custom Fields
+                        welcome_page: 'صفحه خوش‌آمدگویی',
+                        question_group: 'گروه سوال',
+                        ranking: 'رتبه‌بندی',
+                        end_page: 'صفحه پایانی',
+                        // Standard Fields
+                        starRating: 'امتیازدهی',
+                        text: 'متن کوتاه',
+                        textarea: 'متن بلند',
+                        select: 'لیست کشویی',
+                        'radio-group': 'چندگزینه‌ای',
+                        paragraph: 'متن ثابت',
+                        file: 'آپلود فایل',
+                        // Other UI elements
+                        addOption: 'افزودن گزینه',
+                        label: 'عنوان',
+                        description: 'توضیحات',
+                        placeholder: 'متن راهنما (Placeholder)',
+                        required: 'ضروری',
+                        className: 'کلاس CSS',
+                    }
+                }
             },
+            // Disable default action buttons
             disabledActionButtons: ['data', 'save', 'clear'],
-            disableFields: ['autocomplete', 'button', 'hidden', 'paragraph', 'header'],
+
+            // Define the exact fields to be used, replacing the defaults
+            replaceFields: [
+                { type: 'welcome_page', icon: '👋' },
+                { type: 'text' },
+                { type: 'radio-group' },
+                { type: 'textarea' },
+                { type: 'question_group', icon: '❓' },
+                { type: 'select' },
+                { type: 'starRating' },
+                { type: 'ranking', icon: '📊' },
+                { type: 'paragraph' },
+                { type: 'file' },
+                { type: 'end_page', icon: '🏁' },
+            ],
+
+            // Define basic templates for custom fields
+            templates: {
+                welcome_page: fieldData => ({ field: `<div id="${fieldData.name}" class="welcome-page-template"></div>` }),
+                end_page: fieldData => ({ field: `<div id="${fieldData.name}" class="end-page-template"></div>` }),
+                question_group: fieldData => ({ field: `<fieldset id="${fieldData.name}" class="question-group-template"><legend>${fieldData.label}</legend></fieldset>` }),
+                ranking: fieldData => ({ field: `<div id="${fieldData.name}" class="ranking-template"></div>` }),
+            },
+
+            // Define user attributes for custom fields (adds them to settings panel)
+            typeUserAttrs: {
+                welcome_page: {
+                    description: { label: 'توضیحات', type: 'textarea' }
+                },
+                end_page: {
+                    description: { label: 'توضیحات', type: 'textarea' }
+                },
+                question_group: {
+                    description: { label: 'توضیحات', type: 'textarea' }
+                },
+                ranking: {
+                    values: { label: 'گزینه‌های رتبه‌بندی', type: 'option' }
+                }
+            },
+
+            // Disable unnecessary attributes for a cleaner interface
             typeUserDisabledAttrs: {
-                'checkbox-group': ['name', 'required', 'description', 'access', 'className', 'toggle'],
-                'radio-group': ['name', 'required', 'description', 'access', 'className', 'other', 'inline'],
-                'select': ['name', 'required', 'description', 'access', 'className', 'multiple'],
-                'text': ['name', 'required', 'description', 'access', 'className', 'subtype', 'maxlength', 'placeholder'],
-                'textarea': ['name', 'required', 'description', 'access', 'className', 'subtype', 'maxlength', 'rows'],
-                'number': ['name', 'required', 'description', 'access', 'className', 'min', 'max', 'step'],
-                'date': ['name', 'required', 'description', 'access', 'className'],
+                'welcome_page': ['name', 'required', 'placeholder', 'className', 'access', 'value', 'subtype'],
+                'end_page': ['name', 'required', 'placeholder', 'className', 'access', 'value', 'subtype'],
+                'question_group': ['name', 'required', 'placeholder', 'className', 'access', 'value'],
+                'ranking': ['name', 'required', 'placeholder', 'className', 'access', 'value'],
+                'paragraph': ['name', 'className', 'access', 'subtype'],
+                'starRating': ['name', 'required', 'description', 'access', 'className'],
+                'file': ['name', 'description', 'access', 'subtype', 'multiple'],
+                'text': ['name', 'access', 'subtype', 'maxlength'],
+                'textarea': ['name', 'access', 'subtype', 'maxlength', 'rows'],
+                'select': ['name', 'access', 'multiple'],
+                'radio-group': ['name', 'access', 'other', 'inline'],
             },
         };
+
         const formBuilder = $('#form-builder-container').formBuilder(options);
+        const statusDiv = $('#form-builder-status');
+
+        // --- HTMX Integration ---
+        document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+            if (evt.detail.successful && evt.detail.pathInfo.requestPath === tahlilgar_form_builder.rest_url) {
+                statusDiv.text('فرم با موفقیت ذخیره شد!').css('color', 'green');
+                setTimeout(function() {
+                    const managementUrl = new URL(window.location.href);
+                    managementUrl.pathname = '/form-management'; // Assumes this page exists
+                    window.location.href = managementUrl.href;
+                }, 1500);
+            }
+        });
+
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            if (evt.detail.pathInfo.requestPath === tahlilgar_form_builder.rest_url) {
+                const errorMsg = evt.detail.xhr.responseJSON ? evt.detail.xhr.responseJSON.message : 'خطایی در هنگام ذخیره فرم رخ داد.';
+                statusDiv.text('خطا: ' + errorMsg).css('color', 'red');
+            }
+        });
 
         $('#save-form-button').on('click', function() {
             const formTitle = $('#form-title').val().trim();
             const formData = formBuilder.actions.getData('json');
-            const statusDiv = $('#form-builder-status');
 
             if (!formTitle) {
                 statusDiv.text('لطفاً یک عنوان برای فرم وارد کنید.').css('color', 'red');
@@ -35,26 +125,13 @@ jQuery(document).ready(function($) {
 
             statusDiv.text('در حال ذخیره فرم...').css('color', 'blue');
 
-            $.ajax({
-                url: tahlilgar_form_builder.rest_url,
-                method: 'POST',
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-WP-Nonce', tahlilgar_form_builder.nonce);
+            htmx.ajax('POST', tahlilgar_form_builder.rest_url, {
+                headers: {
+                    'X-WP-Nonce': tahlilgar_form_builder.nonce
                 },
-                data: {
+                values: {
                     form_title: formTitle,
-                    form_data: JSON.parse(formData) // Ensure data is sent as an object
-                },
-                success: function(response) {
-                    statusDiv.text('فرم با موفقیت ذخیره شد!').css('color', 'green');
-                    // Redirect to form management page after a short delay
-                    setTimeout(function() {
-                        window.location.href = '/form-management';
-                    }, 1500);
-                },
-                error: function(xhr) {
-                    const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'خطایی در هنگام ذخیره فرم رخ داد.';
-                    statusDiv.text('خطا: ' + errorMsg).css('color', 'red');
+                    form_data: formData // HTMX will handle the encoding
                 }
             });
         });
