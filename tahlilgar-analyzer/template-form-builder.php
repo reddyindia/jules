@@ -60,32 +60,20 @@ if ( ! is_user_logged_in() ) {
 
         <!-- Main Content for Form Builder -->
         <main id="main-content">
-            <header class="main-header">
-                <div class="header-left">
-                    <button id="sidebar-toggle-open" class="sidebar-toggle-btn">☰</button>
-                    <h1>فرم‌ساز پیشرفته</h1>
-                </div>
-                <div class="header-right">
-                    <div class="theme-switcher">
-                        <input type="checkbox" id="theme-switch-checkbox" class="theme-switch-checkbox">
-                        <label for="theme-switch-checkbox" class="theme-switch-label">
-                            <span class="sun">☀️</span>
-                            <span class="moon">🌙</span>
-                        </label>
+            <div class="form-builder-main-panel">
+                <div class="form-builder-top-toolbar">
+                    <div class="toolbar-left">
+                        <input type="text" id="form-title-input" placeholder="فرم بدون عنوان" class="form-title-input">
                     </div>
-                    <div class="user-profile">
-                        <span><?php echo esc_html( wp_get_current_user()->display_name ); ?></span>
-                        <?php echo get_avatar( get_current_user_id(), 32 ); ?>
+                    <div class="toolbar-right">
+                        <button id="preview-form-btn" class="button">پیش‌نمایش</button>
+                        <button id="save-form-btn" class="button-primary">ذخیره</button>
                     </div>
                 </div>
-            </header>
-            <div class="content-area">
-                <div class="form-builder-header">
-                    <input type="text" id="form-title-input" placeholder="یک نام برای فرم خود انتخاب کنید..." class="form-title-input">
-                    <button id="save-form-btn" class="button-primary">ذخیره فرم</button>
-                </div>
-                <div id="form-builder-wrap">
-                    <!-- The formBuilder instance will be rendered here -->
+                <div class="form-builder-canvas-container">
+                    <div id="form-builder-wrap">
+                        <!-- The formBuilder instance will be rendered here -->
+                    </div>
                 </div>
             </div>
         </main>

@@ -13,26 +13,26 @@ jQuery(document).ready(function($) {
         },
         disabledActionButtons: ['data', 'save'],
 
-        // For this test, we only show the new shortText field.
+        // The final, complete list of all 11 custom tools.
         controlOrder: [
-            'shortText'
+            'welcomePage',
+            'shortText',
+            'longText',
+            'multipleChoice',
+            'dropdownList',
+            'questionGroup',
+            'staticText',
+            'ratingScale',
+            'rankingList',
+            'fileUpload',
+            'endPage'
         ],
 
-        disableFields: [ // Disable all default fields to ensure only ours is used.
-            'autocomplete',
-            'button',
-            'checkbox-group',
-            'date',
-            'file',
-            'header',
-            'hidden',
-            'number',
-            'paragraph',
-            'radio-group',
-            'select',
-            'starRating',
-            'text',
-            'textarea',
+        // We no longer need to disable default fields as we are providing a full custom set.
+        disableFields: [
+            'autocomplete', 'button', 'checkbox-group', 'date', 'file', 'header',
+            'hidden', 'number', 'paragraph', 'radio-group', 'select', 'starRating',
+            'text', 'textarea'
         ],
 
         messages: {
@@ -46,14 +46,15 @@ jQuery(document).ready(function($) {
     const formBuilder = $(fbWrap).formBuilder(options);
 
     const saveBtn = document.getElementById('save-form-btn');
+    const previewBtn = document.getElementById('preview-form-btn');
+    const titleInput = document.getElementById('form-title-input');
+
     if (saveBtn) {
         saveBtn.addEventListener('click', async function() {
-            const formTitleInput = document.getElementById('form-title-input');
-            const formTitle = formTitleInput.value.trim();
-
+            const formTitle = titleInput.value.trim();
             if (formTitle === '') {
                 alert('لطفاً یک نام برای فرم خود وارد کنید.');
-                formTitleInput.focus();
+                titleInput.focus();
                 return;
             }
 
@@ -94,8 +95,14 @@ jQuery(document).ready(function($) {
                 alert('یک خطای ناشناخته در هنگام ارتباط با سرور رخ داد.');
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.textContent = 'ذخیره فرم';
+                saveBtn.textContent = 'ذخیره';
             }
+        });
+    }
+
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+            alert('قابلیت پیش‌نمایش در مراحل بعدی پیاده‌سازی خواهد شد.');
         });
     }
 });
