@@ -7,6 +7,36 @@
 
     const registerField = $.fn.formBuilder.registerField;
 
+    // --- Helper function to create a settings field in the edit panel ---
+    function createSetting(field, type, name, label) {
+        const propName = `attrs.${name}`;
+        const attrs = {
+            type: type,
+            name: propName,
+            id: `${field.id}-${propName}`,
+            className: 'prop-value'
+        };
+
+        if (type === 'checkbox') {
+            attrs.checked = field.config[propName] || false;
+        } else {
+            attrs.value = field.config[propName] || '';
+        }
+
+        const input = field.markup(type === 'textarea' ? 'textarea' : 'input', null, attrs);
+        const labelMarkup = field.markup('label', label, { htmlFor: attrs.id, className: 'prop-label' });
+
+        $(input).on('input change', function(e) {
+            if (type === 'checkbox') {
+                field.config[propName] = e.target.checked;
+            } else {
+                field.config[propName] = e.target.value;
+            }
+        });
+
+        return field.markup('div', [labelMarkup, input], { className: `form-group prop-wrap prop-${name}` });
+    }
+
     // --- 1. Welcome Page ---
     registerField('welcomePage', {
         name: 'welcomePage',
@@ -15,59 +45,34 @@
         extends: 'header',
         config: {
             label: 'به پرسشنامه ما خوش آمدید!',
-            subtype: 'h1',
-            className: 'welcome-page-header'
+            subtype: 'h1'
         }
     });
 
     // --- 2. Short Text ---
-    const validationTypes = {
-        'none': { label: 'هیچکدام', pattern: '', placeholder: '...' },
-        'email': { label: 'ایمیل', pattern: '^\\S+@\\S+\\.\\S+$', placeholder: 'example@domain.com' },
-        'url': { label: 'آدرس سایت (URL)', pattern: '^(https?|ftp):\\/\\/[^\\s\\/$.?#].[^\\s]*$', placeholder: 'https://example.com' },
-        'iranianMobile': { label: 'تلفن همراه ایران', pattern: '^(09|\\+989)\\d{9}$', placeholder: '09123456789' },
-        'persianChars': { label: 'حروف فارسی', pattern: '^[\\u0600-\\u06FF\\s]+$', placeholder: 'فقط حروف فارسی' },
-        'englishChars': { label: 'حروف انگلیسی', pattern: '^[a-zA-Z\\s]+$', placeholder: 'Only English letters' },
-        'digits': { label: 'عدد (انگلیسی)', pattern: '^\\d+$', placeholder: '12345' },
-    };
     registerField('shortText', {
         name: 'shortText',
-        label: 'متنی با پاسخ کوتاه',
+        label: 'متن کوتاه',
         icon: 'T',
         extends: 'text',
         onrender: function(event) {
             const field = this;
-            const fieldData = field.data;
-            fieldData.validationType = fieldData.validationType || 'none';
-            const dropdownLabel = field.markup('label', 'نوع اعتبارسنجی', { className: 'prop-label' });
-            const options = Object.entries(validationTypes).map(([key, { label }]) => {
-                const optionAttrs = { value: key };
-                if (key === fieldData.validationType) {
-                    optionAttrs.selected = true;
-                }
-                return field.markup('option', label, optionAttrs);
+            const validationTypes = {
+                '': 'هیچکدام',
+                'email': 'ایمیل',
+                'url': 'آدرس سایت',
+                'tel': 'تلفن',
+                'number': 'عدد',
+            };
+            const options = Object.entries(validationTypes).map(([value, label]) => {
+                const attrs = { value };
+                if (value === (field.config.attrs.type || '')) attrs.selected = true;
+                return field.markup('option', label, attrs);
             });
-            const dropdown = field.markup('select', options, { className: 'prop-value' });
-            $(dropdown).on('change', function(e) {
-                const newType = e.target.value;
-                fieldData.validationType = newType;
-                const validation = validationTypes[newType];
-                const inputField = field.element.querySelector('.fld-input');
-                if (inputField) {
-                    inputField.setAttribute('placeholder', validation.placeholder);
-                    if (validation.pattern) {
-                        inputField.setAttribute('pattern', validation.pattern);
-                    } else {
-                        inputField.removeAttribute('pattern');
-                    }
-                }
-                field.data.placeholder = validation.placeholder;
-            });
-            const placeholderInput = event.target.querySelector('[name="fld-placeholder"]');
-            if (placeholderInput) {
-                const container = field.markup('div', [dropdownLabel, dropdown], {className: 'form-group prop-wrap'});
-                placeholderInput.parentElement.after(container);
-            }
+            const select = field.markup('select', options, { className: 'prop-value' });
+            $(select).on('change', e => { field.config.attrs.type = e.target.value; });
+            const label = field.markup('label', 'نوع اعتبارسنجی', { className: 'prop-label' });
+            event.target.querySelector('.fld-placeholder-wrap').after(field.markup('div', [label, select], {className: 'form-group prop-wrap'}));
         }
     });
 
@@ -76,26 +81,15 @@
         name: 'multipleChoice',
         label: 'چند‌گزینه‌ای',
         icon: '☑️',
-        extends: 'checkbox-group',
-        config: {
-            label: 'یک یا چند گزینه را انتخاب کنید',
-            options: [
-                { label: 'گزینه ۱', value: 'option-1', selected: false },
-                { label: 'گزینه ۲', value: 'option-2', selected: false }
-            ]
-        }
+        extends: 'checkbox-group'
     });
 
     // --- 4. Long Text ---
     registerField('longText', {
         name: 'longText',
-        label: 'متنی با پاسخ بلند',
+        label: 'متن بلند',
         icon: '📝',
-        extends: 'textarea',
-        config: {
-            label: 'پاسخ خود را اینجا بنویسید',
-            rows: 4
-        }
+        extends: 'textarea'
     });
 
     // --- 5. Question Group ---
@@ -105,9 +99,8 @@
         icon: '🗂️',
         extends: 'header',
         config: {
-            label: 'عنوان گروه سوالات',
-            subtype: 'h3',
-            className: 'field-group-header'
+            label: 'عنوان گروه',
+            subtype: 'h3'
         }
     });
 
@@ -116,14 +109,7 @@
         name: 'dropdownList',
         label: 'لیست کشویی',
         icon: '🔻',
-        extends: 'select',
-        config: {
-            label: 'یک گزینه را انتخاب کنید',
-            options: [
-                { label: 'گزینه ۱', value: 'option-1', selected: false },
-                { label: 'گزینه ۲', value: 'option-2', selected: false }
-            ]
-        }
+        extends: 'select'
     });
 
     // --- 7. Rating ---
@@ -131,31 +117,39 @@
         name: 'ratingScale',
         label: 'درجه‌بندی',
         icon: '⭐',
-        build: function(value) {
-            const { label, max = 5 } = this.config;
-            let stars = '';
-            for (let i = 1; i <= max; i++) {
-                stars += `<span class="star" data-value="${i}">☆</span>`;
-            }
-            return this.markup('div', [
-                this.markup('label', label, { className: 'fld-label' }),
-                this.markup('div', stars, { className: 'rating-stars' })
-            ], { className: 'form-group rating-scale-wrap' });
+        extends: 'radio-group',
+        config: {
+            label: 'امتیاز شما چیست؟',
+            options: [
+                { label: '★', value: '1' },
+                { label: '★', value: '2' },
+                { label: '★', value: '3' },
+                { label: '★', value: '4' },
+                { label: '★', value: '5' }
+            ],
+            inline: true // Display stars in a row
         },
         onrender: function(event) {
             const field = this;
             const maxRatingInput = field.markup('input', null, {
                 type: 'number',
-                name: 'max',
-                value: field.config.max || 5,
-                className: 'prop-value'
+                value: field.config.options.length || 5,
+                className: 'prop-value',
+                min: 1, max: 10
             });
             $(maxRatingInput).on('input', function(e) {
-                field.config.max = e.target.value;
+                const count = parseInt(e.target.value, 10);
+                const newOptions = [];
+                for (let i=1; i<=count; i++) {
+                    newOptions.push({ label: '★', value: String(i) });
+                }
+                field.config.options = newOptions;
+                // This part is tricky as it requires re-rendering the options in the edit panel.
+                // For now, we just update the config.
             });
-            const maxLabel = field.markup('label', 'حداکثر امتیاز', { className: 'prop-label' });
-            const container = field.markup('div', [maxLabel, maxRatingInput], { className: 'form-group prop-wrap' });
-            event.target.querySelector('.fld-label-wrap').after(container);
+            const maxLabel = field.markup('label', 'تعداد ستاره', { className: 'prop-label' });
+            event.target.querySelector('.fld-options-wrap').before(field.markup('div', [maxLabel, maxRatingInput], {className: 'form-group prop-wrap'}));
+            event.target.querySelector('.fld-options-wrap').style.display = 'none'; // Hide the default options editor
         }
     });
 
@@ -164,33 +158,10 @@
         name: 'rankingList',
         label: 'اولویت‌دهی',
         icon: '↕️',
-        build: function(value) {
-            const { label, values } = this.config;
-            const items = values.map(val => this.markup('li', val.label, {className: 'ranking-item'}));
-            return this.markup('div', [
-                this.markup('label', label, { className: 'fld-label' }),
-                this.markup('ol', items, { className: 'ranking-list' })
-            ], { className: 'form-group ranking-list-wrap' });
-        },
-        onrender: function(event) {
-            const field = this;
-            const optionsTextarea = field.markup('textarea', field.config.values.map(v => v.label).join('\n'), {
-                name: 'values',
-                className: 'prop-value'
-            });
-            $(optionsTextarea).on('input', function(e) {
-                field.config.values = e.target.value.split('\n').map(line => ({ label: line, value: line }));
-            });
-            const optionsLabel = field.markup('label', 'گزینه‌ها (هر کدام در یک خط)', { className: 'prop-label' });
-            const container = field.markup('div', [optionsLabel, optionsTextarea], { className: 'form-group prop-wrap' });
-            event.target.querySelector('.fld-label-wrap').after(container);
-        },
+        extends: 'checkbox-group', // Base it on this to get the options editor
         config: {
-            values: [
-                { label: 'گزینه اول', value: 'گزینه اول' },
-                { label: 'گزینه دوم', value: 'گزینه دوم' },
-                { label: 'گزینه سوم', value: 'گزینه سوم' },
-            ]
+            label: 'آیتم‌ها را اولویت‌بندی کنید',
+            description: 'کاربران گزینه‌ها را با کشیدن و رها کردن مرتب خواهند کرد.'
         }
     });
 
@@ -199,11 +170,7 @@
         name: 'staticText',
         label: 'متن بدون پاسخ',
         icon: 'ℹ️',
-        extends: 'paragraph',
-        config: {
-            label: 'این یک متن راهنما برای کاربران است.',
-            className: 'static-text-paragraph'
-        }
+        extends: 'paragraph'
     });
 
     // --- 10. File Upload ---
@@ -222,7 +189,6 @@
         extends: 'paragraph',
         config: {
             label: 'از وقتی که گذاشتید سپاسگزاریم!',
-            className: 'end-page-paragraph'
         }
     });
 

@@ -67,6 +67,32 @@
     outline: none;
 }
 
+/* --- Custom Settings Panel Styles --- */
+.form-field-edit .prop-wrap {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.form-field-edit .prop-wrap .prop-label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-field-edit .prop-wrap select.prop-value {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%20fill%3D%22%238e9aaf%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: left 10px center;
+    padding-left: 30px;
+}
+
+.dark-theme .form-field-edit .prop-wrap {
+    border-top-color: var(--border-color-dark);
+}
+
 /* --- Dark Theme Overrides --- */
 .dark-theme .form-builder-stage .form-field {
     border-color: var(--border-color-dark);
