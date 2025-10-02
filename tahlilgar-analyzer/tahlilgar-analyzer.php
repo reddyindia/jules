@@ -49,13 +49,32 @@ function tahlilgar_analyzer_create_pages() {
         $form_builder_page = array(
             'post_title'    => __( 'Form Builder', 'tahlilgar-analyzer' ),
             'post_name'     => 'form-builder',
-            'post_content'  => '',
-            'post_status'   => 'publish',
-            'post_author'   => 1,
-            'post_type'     => 'page',
+            'post_content'  => '', 'post_status'   => 'publish', 'post_author'   => 1, 'post_type'     => 'page',
             'page_template' => 'template-form-builder.php'
         );
         wp_insert_post( $form_builder_page );
+    }
+
+    // Form Management Page
+    if ( ! get_page_by_path( 'form-management' ) ) {
+        $form_management_page = array(
+            'post_title'    => __( 'Form Management', 'tahlilgar-analyzer' ),
+            'post_name'     => 'form-management',
+            'post_content'  => '', 'post_status'   => 'publish', 'post_author'   => 1, 'post_type'     => 'page',
+            'page_template' => 'template-form-management.php'
+        );
+        wp_insert_post( $form_management_page );
+    }
+
+    // Results Page (as a placeholder, might not be directly accessible)
+    if ( ! get_page_by_path( 'results' ) ) {
+        $results_page = array(
+            'post_title'    => __( 'Results', 'tahlilgar-analyzer' ),
+            'post_name'     => 'results',
+            'post_content'  => '', 'post_status'   => 'publish', 'post_author'   => 1, 'post_type'     => 'page',
+            'page_template' => 'template-results.php'
+        );
+        wp_insert_post( $results_page );
     }
 }
 register_activation_hook( __FILE__, 'tahlilgar_analyzer_create_pages' );
@@ -83,6 +102,20 @@ function tahlilgar_analyzer_load_template( $template ) {
 
     if ( is_page( 'form-builder' ) ) {
         $new_template = plugin_dir_path( __FILE__ ) . 'template-form-builder.php';
+        if ( file_exists( $new_template ) ) {
+            return $new_template;
+        }
+    }
+
+    if ( is_page( 'form-management' ) ) {
+        $new_template = plugin_dir_path( __FILE__ ) . 'template-form-management.php';
+        if ( file_exists( $new_template ) ) {
+            return $new_template;
+        }
+    }
+
+    if ( is_page( 'results' ) ) {
+        $new_template = plugin_dir_path( __FILE__ ) . 'template-results.php';
         if ( file_exists( $new_template ) ) {
             return $new_template;
         }
@@ -157,6 +190,28 @@ function tahlilgar_analyzer_enqueue_assets() {
             true
         );
     }
+
+    // Form management assets
+    if ( is_page( 'form-management' ) ) {
+        wp_enqueue_script(
+            'tahlilgar-form-management-script',
+            plugin_dir_url( __FILE__ ) . 'assets/js/form-management.js',
+            array( 'jquery', 'wp-api' ),
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-management.js' ),
+            true
+        );
+    }
+
+    // Results page assets
+    if ( is_page( 'results' ) ) {
+        wp_enqueue_script(
+            'tahlilgar-results-script',
+            plugin_dir_url( __FILE__ ) . 'assets/js/results.js',
+            array( 'jquery', 'wp-api' ),
+            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/results.js' ),
+            true
+        );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'tahlilgar_analyzer_enqueue_assets' );
 
@@ -175,6 +230,7 @@ function tahlilgar_analyzer_register_form_cpt() {
         ),
         'supports'    => array( 'title' ),
         'menu_icon'   => 'dashicons-list-view',
+        'show_in_menu'=> false, // Hide from main admin menu
     );
     register_post_type( 'tahlilgar_form', $args );
 }
@@ -194,7 +250,7 @@ function tahlilgar_analyzer_register_submission_cpt() {
         ),
         'supports'    => array( 'title', 'editor', 'author' ),
         'menu_icon'   => 'dashicons-inbox',
-        'show_in_menu'=> 'edit.php?post_type=tahlilgar_form', // Show under "Tahlilgar Forms" menu
+        'show_in_menu'=> false, // Hide from main admin menu
     );
     register_post_type( 'tahlilgar_submission', $args );
 }
@@ -205,35 +261,126 @@ add_action( 'init', 'tahlilgar_analyzer_register_submission_cpt' );
  * Register custom REST API endpoint for saving forms.
  */
 function tahlilgar_analyzer_register_rest_routes() {
+    // Register routes for /forms (GET and POST)
     register_rest_route( 'tahlilgar/v1', '/forms', array(
-        'methods'             => WP_REST_Server::CREATABLE,
-        'callback'            => 'tahlilgar_analyzer_save_form_rest_handler',
-        'permission_callback' => function () {
-            return current_user_can( 'publish_posts' );
-        },
-        'args' => array(
-            'form_title' => array(
-                'required' => true,
-                'sanitize_callback' => 'sanitize_text_field',
+        array(
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => 'tahlilgar_analyzer_save_form_rest_handler',
+            'permission_callback' => function () { return current_user_can( 'publish_posts' ); },
+            'args'                => array(
+                'form_title' => array( 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
+                'form_data'  => array( 'required' => true ),
             ),
-            'form_data' => array(
-                'required' => true,
-            ),
+        ),
+        array(
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => 'tahlilgar_analyzer_get_forms_handler',
+            'permission_callback' => function () { return current_user_can( 'publish_posts' ); },
         ),
     ) );
 
+    // Register routes for /submissions/{id} (GET and POST)
     register_rest_route( 'tahlilgar/v1', '/submissions/(?P<id>\\d+)', array(
-        'methods'             => WP_REST_Server::CREATABLE,
-        'callback'            => 'tahlilgar_analyzer_save_submission_rest_handler',
-        'permission_callback' => '__return_true', // Anyone can submit a form
-        'args' => array(
-            'id' => array(
-                'validate_callback' => function($param) { return is_numeric( $param ); }
-            ),
+        array(
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => 'tahlilgar_analyzer_save_submission_rest_handler',
+            'permission_callback' => '__return_true',
+            'args'                => array( 'id' => array( 'validate_callback' => function($param) { return is_numeric($param); } ) ),
+        ),
+        array(
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => 'tahlilgar_analyzer_get_submissions_handler',
+            'permission_callback' => function () { return current_user_can( 'publish_posts' ); },
+            'args'                => array( 'id' => array( 'validate_callback' => function($param) { return is_numeric($param); } ) ),
         ),
     ) );
 }
 add_action( 'rest_api_init', 'tahlilgar_analyzer_register_rest_routes' );
+
+/**
+ * REST API handler for getting submissions for a specific form.
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+function tahlilgar_analyzer_get_submissions_handler( WP_REST_Request $request ) {
+    $form_id = (int) $request['id'];
+
+    $args = array(
+        'post_type'      => 'tahlilgar_submission',
+        'post_parent'    => $form_id,
+        'posts_per_page' => -1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $submissions_query = new WP_Query( $args );
+    $submissions_data = array();
+
+    if ( $submissions_query->have_posts() ) {
+        while ( $submissions_query->have_posts() ) {
+            $submissions_query->the_post();
+            $submissions_data[] = array(
+                'id'      => get_the_ID(),
+                'title'   => get_the_title(),
+                'date'    => get_the_date(),
+                'content' => get_the_content(),
+            );
+        }
+        wp_reset_postdata();
+    }
+
+    return new WP_REST_Response( $submissions_data, 200 );
+}
+
+/**
+ * REST API handler for getting the list of forms.
+ *
+ * @return WP_REST_Response
+ */
+function tahlilgar_analyzer_get_forms_handler() {
+    $args = array(
+        'post_type'      => 'tahlilgar_form',
+        'posts_per_page' => -1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $forms_query = new WP_Query( $args );
+    $forms_data = array();
+
+    if ( $forms_query->have_posts() ) {
+        $results_page_url = get_permalink( get_page_by_path( 'results' ) );
+
+        while ( $forms_query->have_posts() ) {
+            $forms_query->the_post();
+            $form_id = get_the_ID();
+
+            // Count submissions for this form
+            $submission_query = new WP_Query(array(
+                'post_type' => 'tahlilgar_submission',
+                'post_parent' => $form_id,
+                'posts_per_page' => -1,
+                'fields' => 'ids'
+            ));
+            $submission_count = $submission_query->post_count;
+
+            $results_link = $results_page_url ? add_query_arg( 'form_id', $form_id, $results_page_url ) : '#';
+
+            $forms_data[] = array(
+                'id'          => $form_id,
+                'title'       => get_the_title(),
+                'date'        => get_the_date(),
+                'shortcode'   => '[tahlilgar_form id="' . $form_id . '"]',
+                'results_link'=> $results_link,
+                'submission_count' => $submission_count,
+            );
+        }
+        wp_reset_postdata();
+    }
+
+    return new WP_REST_Response( $forms_data, 200 );
+}
 
 /**
  * REST API handler for saving a form submission.
@@ -312,15 +459,36 @@ function tahlilgar_analyzer_save_form_rest_handler( WP_REST_Request $request ) {
 }
 
 // In the enqueue function, we need to localize the script to pass REST info
-function tahlilgar_analyzer_localize_scripts( $handle ) {
-    if ( $handle === 'tahlilgar-form-builder-init' ) {
+function tahlilgar_analyzer_localize_scripts() {
+    if ( is_page( 'form-builder' ) ) {
         wp_localize_script(
             'tahlilgar-form-builder-init',
             'tahlilgar_form_builder',
             array(
-                // get_rest_url provides the root, e.g., https://example.com/wp-json/
                 'rest_url' => get_rest_url( null, 'tahlilgar/v1/forms' ),
-                'nonce'    => wp_create_nonce( 'wp_rest' ) // Standard nonce for REST API
+                'nonce'    => wp_create_nonce( 'wp_rest' )
+            )
+        );
+    }
+
+    if ( is_page( 'form-management' ) ) {
+        wp_localize_script(
+            'tahlilgar-form-management-script',
+            'tahlilgar_management_data',
+            array(
+                'rest_url' => get_rest_url( null, 'tahlilgar/v1/forms' ),
+                'nonce'    => wp_create_nonce( 'wp_rest' )
+            )
+        );
+    }
+
+    if ( is_page( 'results' ) ) {
+        wp_localize_script(
+            'tahlilgar-results-script',
+            'tahlilgar_results_data',
+            array(
+                'rest_url_base' => get_rest_url( null, 'tahlilgar/v1/submissions/' ),
+                'nonce'         => wp_create_nonce( 'wp_rest' )
             )
         );
     }
@@ -328,12 +496,12 @@ function tahlilgar_analyzer_localize_scripts( $handle ) {
 
 // Hook into wp_enqueue_scripts to localize
 add_action( 'wp_enqueue_scripts', function() {
-    if ( is_page( 'form-builder' ) ) {
-        // Enqueue WP API scripts to handle nonce automatically
+    // Enqueue WP API scripts to handle nonce automatically on our pages
+    if ( is_page( 'form-builder' ) || is_page( 'form-management' ) || is_page( 'results' ) ) {
         wp_enqueue_script( 'wp-api' );
-        // Localize the script only on the form builder page
-        tahlilgar_analyzer_localize_scripts('tahlilgar-form-builder-init');
     }
+    // Localize the scripts
+    tahlilgar_analyzer_localize_scripts();
 });
 
 /**

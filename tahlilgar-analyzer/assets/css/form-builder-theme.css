@@ -73,11 +73,14 @@
 }
 
 .dark-theme .form-builder-control-box li {
+    background-color: var(--bg-secondary-dark);
+    color: var(--text-primary-dark);
     border-color: var(--border-color-dark);
 }
 .dark-theme .form-builder-control-box li:hover {
     background-color: var(--accent-primary-dark);
     border-color: var(--accent-secondary-dark);
+    color: white;
 }
 
 .dark-theme .form-field-edit .prop-value {

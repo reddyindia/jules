@@ -38,8 +38,11 @@ if ( ! is_user_logged_in() ) {
                 <li class="menu-item active"><a href="#">
                     <span class="icon">📝</span><span class="text">فرم‌ساز</span>
                 </a></li>
-                <li class="menu-item"><a href="#">
-                    <span class="icon">📈</span><span class="text">آمارها</span>
+                <li class="menu-item"><a href="<?php echo get_permalink( get_page_by_path( 'form-management' ) ); ?>">
+                    <span class="icon">🗂️</span><span class="text">مدیریت فرم‌ها</span>
+                </a></li>
+                 <li class="menu-item"><a href="#">
+                    <span class="icon">📈</span><span class="text">نتایج</span>
                 </a></li>
                 <li class="menu-item"><a href="#">
                     <span class="icon">⚙️</span><span class="text">تنظیمات</span>

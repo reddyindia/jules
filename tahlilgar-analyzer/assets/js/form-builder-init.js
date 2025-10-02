@@ -13,30 +13,20 @@ jQuery(document).ready(function($) {
         },
         disabledActionButtons: ['data', 'save'],
 
-        // Updated list of controls including our new custom fields
+        // The final, precise list of tools as requested by the user.
         controlOrder: [
             'welcomePage',
-            'fieldGroup',
-            'staticText',
-            'validatedText',
-            'textarea',
-            'number',
-            'select',
-            'checkbox-group',
-            'radio-group',
+            'shortText',
+            'multipleChoice',
+            'longText',
+            'questionGroup',
+            'dropdownList',
             'ratingScale',
             'rankingList',
-            'date',
-            'file',
-            'autocomplete',
-            'readOnlyText', // Calculated Variable field
-            'hidden',       // Hidden Info field
-            'button',
+            'staticText',
+            'fileUpload',
             'endPage'
         ],
-
-        // We remove replaceFields to avoid ambiguity and rely on controlOrder
-        // for the definitive list of available fields.
 
         messages: {
             clearAllMessage: 'آیا از پاک کردن تمام فیلدها مطمئن هستید؟',
