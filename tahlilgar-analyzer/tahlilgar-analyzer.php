@@ -3,13 +3,18 @@
  * Plugin Name: تحلیلگر
  * Plugin URI: https://example.com/
  * Description: A simple WordPress plugin.
- * Version: 1.0
+ * Version: 1.1.0
  * Author: Your Name
  * Author URI: https://example.com/
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
+}
+
+// Load Composer autoloader if it exists.
+if ( file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
+    require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 }
 
 /**
@@ -556,3 +561,26 @@ function tahlilgar_analyzer_form_shortcode_handler( $atts ) {
     return '<div id="tahlilgar-form-render-' . esc_attr( $form_id ) . '" class="tahlilgar-form-render-area"></div>';
 }
 add_shortcode( 'tahlilgar_form', 'tahlilgar_analyzer_form_shortcode_handler' );
+
+/**
+ * Initialize the GitHub update checker.
+ */
+function tahlilgar_analyzer_initialize_updater() {
+    // Check if the update checker class exists.
+    if ( ! class_exists( 'YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory' ) ) {
+        return;
+    }
+
+    $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/reddyindia/jules/',
+        __FILE__,
+        'tahlilgar-analyzer'
+    );
+
+    // The branch that contains the plugin.
+    $updateChecker->setBranch('create-tahlilgar-analyzer-plugin');
+
+    // The subdirectory that contains the plugin files.
+    $updateChecker->setPluginSubdirectory('tahlilgar-analyzer');
+}
+add_action( 'plugins_loaded', 'tahlilgar_analyzer_initialize_updater' );
