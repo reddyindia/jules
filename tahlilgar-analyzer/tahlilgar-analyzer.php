@@ -82,140 +82,68 @@ function tahlilgar_analyzer_create_pages() {
         wp_insert_post( $results_page );
     }
 }
-register_activation_hook( __FILE__, 'tahlilgar_analyzer_create_pages' );
+// Run page creation on init to ensure pages exist, especially after plugin updates.
+add_action( 'init', 'tahlilgar_analyzer_create_pages' );
 
 /**
- * Load page templates.
+ * Include custom page templates.
+ * This is more reliable for block themes than the 'page_template' filter.
  *
  * @param string $template The path of the template to include.
  * @return string
  */
-function tahlilgar_analyzer_load_template( $template ) {
-    if ( is_page( 'dashboard' ) ) {
-        $new_template = plugin_dir_path( __FILE__ ) . 'template-dashboard.php';
-        if ( file_exists( $new_template ) ) {
-            return $new_template;
-        }
-    }
+function tahlilgar_analyzer_template_include( $template ) {
+    $pages_and_templates = array(
+        'dashboard'       => 'template-dashboard.php',
+        'login'           => 'template-login.php',
+        'form-builder'    => 'template-form-builder.php',
+        'form-management' => 'template-form-management.php',
+        'results'         => 'template-results.php',
+    );
 
-    if ( is_page( 'login' ) ) {
-        $new_template = plugin_dir_path( __FILE__ ) . 'template-login.php';
-        if ( file_exists( $new_template ) ) {
-            return $new_template;
-        }
-    }
-
-    if ( is_page( 'form-builder' ) ) {
-        $new_template = plugin_dir_path( __FILE__ ) . 'template-form-builder.php';
-        if ( file_exists( $new_template ) ) {
-            return $new_template;
-        }
-    }
-
-    if ( is_page( 'form-management' ) ) {
-        $new_template = plugin_dir_path( __FILE__ ) . 'template-form-management.php';
-        if ( file_exists( $new_template ) ) {
-            return $new_template;
-        }
-    }
-
-    if ( is_page( 'results' ) ) {
-        $new_template = plugin_dir_path( __FILE__ ) . 'template-results.php';
-        if ( file_exists( $new_template ) ) {
-            return $new_template;
+    foreach ( $pages_and_templates as $page_slug => $template_file ) {
+        if ( is_page( $page_slug ) ) {
+            $new_template = plugin_dir_path( __FILE__ ) . $template_file;
+            if ( file_exists( $new_template ) ) {
+                return $new_template;
+            }
         }
     }
 
     return $template;
 }
-add_filter( 'page_template', 'tahlilgar_analyzer_load_template' );
+add_filter( 'template_include', 'tahlilgar_analyzer_template_include', 99 );
 
 /**
- * Enqueue dashboard assets.
+ * Enqueue assets for the plugin's pages.
  */
 function tahlilgar_analyzer_enqueue_assets() {
-    // Dashboard assets
-    if ( is_page( 'dashboard' ) || is_page('form-builder') ) {
-        wp_enqueue_style(
-            'tahlilgar-dashboard-style',
-            plugin_dir_url( __FILE__ ) . 'assets/css/dashboard.css',
-            array(),
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/dashboard.css' )
-        );
+    $is_plugin_page = is_page( array( 'dashboard', 'form-builder', 'form-management', 'results' ) );
 
-        wp_enqueue_script(
-            'tahlilgar-dashboard-script',
-            plugin_dir_url( __FILE__ ) . 'assets/js/dashboard.js',
-            array( 'jquery' ),
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/dashboard.js' ),
-            true
-        );
+    // Load common dashboard styles and scripts on all plugin pages.
+    if ( $is_plugin_page ) {
+        wp_enqueue_style('tahlilgar-dashboard-style', plugin_dir_url( __FILE__ ) . 'assets/css/dashboard.css', array(), filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/dashboard.css' ));
+        wp_enqueue_script('tahlilgar-dashboard-script', plugin_dir_url( __FILE__ ) . 'assets/js/dashboard.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/dashboard.js' ), true);
+        wp_enqueue_script( 'wp-api' ); // Needed for REST API nonces
     }
 
-    // Form builder assets
+    // Form builder specific assets
     if ( is_page( 'form-builder' ) ) {
-        // formBuilder CSS from CDN
-        wp_enqueue_style(
-            'form-builder-style',
-            'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.css'
-        );
-
-        // Custom theme for the form builder
-        wp_enqueue_style(
-            'tahlilgar-form-builder-theme',
-            plugin_dir_url( __FILE__ ) . 'assets/css/form-builder-theme.css',
-            array( 'tahlilgar-dashboard-style', 'form-builder-style' ), // Depends on dashboard and builder styles
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/form-builder-theme.css' )
-        );
-
-        // formBuilder JS from CDN
-        wp_enqueue_script(
-            'form-builder-script',
-            'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.js',
-            array( 'jquery', 'jquery-ui-core', 'jquery-ui-sortable' ),
-            '3.21.0',
-            true
-        );
-
-        // Custom fields script
-        wp_enqueue_script(
-            'tahlilgar-form-builder-custom-fields',
-            plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-custom-fields.js',
-            array( 'form-builder-script' ),
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-custom-fields.js' ),
-            true
-        );
-
-        // Local init script
-        wp_enqueue_script(
-            'tahlilgar-form-builder-init',
-            plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-init.js',
-            array( 'form-builder-script', 'tahlilgar-form-builder-custom-fields' ), // Depends on custom fields
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-init.js' ),
-            true
-        );
+        wp_enqueue_style( 'form-builder-style', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.css' );
+        wp_enqueue_style('tahlilgar-form-builder-theme', plugin_dir_url( __FILE__ ) . 'assets/css/form-builder-theme.css', array( 'tahlilgar-dashboard-style', 'form-builder-style' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/css/form-builder-theme.css' ));
+        wp_enqueue_script( 'form-builder-script', 'https://cdnjs.cloudflare.com/ajax/libs/jQuery-formBuilder/3.21.0/form-builder.min.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-sortable' ), '3.21.0', true );
+        wp_enqueue_script('tahlilgar-form-builder-custom-fields', plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-custom-fields.js', array( 'form-builder-script' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-custom-fields.js' ), true);
+        wp_enqueue_script('tahlilgar-form-builder-init', plugin_dir_url( __FILE__ ) . 'assets/js/form-builder-init.js', array( 'form-builder-script', 'tahlilgar-form-builder-custom-fields', 'wp-api' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-builder-init.js' ), true);
     }
 
-    // Form management assets
+    // Form management specific assets
     if ( is_page( 'form-management' ) ) {
-        wp_enqueue_script(
-            'tahlilgar-form-management-script',
-            plugin_dir_url( __FILE__ ) . 'assets/js/form-management.js',
-            array( 'jquery', 'wp-api' ),
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-management.js' ),
-            true
-        );
+        wp_enqueue_script('tahlilgar-form-management-script', plugin_dir_url( __FILE__ ) . 'assets/js/form-management.js', array( 'jquery', 'wp-api' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/form-management.js' ), true);
     }
 
-    // Results page assets
+    // Results page specific assets
     if ( is_page( 'results' ) ) {
-        wp_enqueue_script(
-            'tahlilgar-results-script',
-            plugin_dir_url( __FILE__ ) . 'assets/js/results.js',
-            array( 'jquery', 'wp-api' ),
-            filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/results.js' ),
-            true
-        );
+        wp_enqueue_script('tahlilgar-results-script', plugin_dir_url( __FILE__ ) . 'assets/js/results.js', array( 'jquery', 'wp-api' ), filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/results.js' ), true);
     }
 }
 add_action( 'wp_enqueue_scripts', 'tahlilgar_analyzer_enqueue_assets' );

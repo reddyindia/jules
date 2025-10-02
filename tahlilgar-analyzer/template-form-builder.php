@@ -80,10 +80,13 @@ if ( ! is_user_logged_in() ) {
                 </div>
             </header>
             <div class="content-area">
+                <div class="form-builder-header">
+                    <input type="text" id="form-title-input" placeholder="یک نام برای فرم خود انتخاب کنید..." class="form-title-input">
+                    <button id="save-form-btn" class="button-primary">ذخیره فرم</button>
+                </div>
                 <div id="form-builder-wrap">
                     <!-- The formBuilder instance will be rendered here -->
                 </div>
-                 <button id="save-form-btn" class="button-primary">ذخیره فرم</button>
             </div>
         </main>
     </div>

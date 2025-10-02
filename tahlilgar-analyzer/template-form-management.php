@@ -58,6 +58,7 @@ if ( ! is_user_logged_in() ) {
                     <h1>مدیریت فرم‌ها</h1>
                 </div>
                 <div class="header-right">
+                    <a href="<?php echo get_permalink( get_page_by_path( 'form-builder' ) ); ?>" class="button button-primary" style="font-size: 14px; padding: 5px 15px; height: auto; line-height: 1.5;">ساخت فرم جدید</a>
                     <div class="theme-switcher">
                         <input type="checkbox" id="theme-switch-checkbox" class="theme-switch-checkbox">
                         <label for="theme-switch-checkbox" class="theme-switch-label">

@@ -48,9 +48,12 @@ jQuery(document).ready(function($) {
                 return;
             }
 
-            const formTitle = prompt('لطفاً یک عنوان برای فرم خود وارد کنید:', 'فرم جدید');
-            if (formTitle === null || formTitle.trim() === '') {
-                alert('ذخیره‌سازی لغو شد. عنوان فرم ضروری است.');
+            const formTitleInput = document.getElementById('form-title-input');
+            const formTitle = formTitleInput.value.trim();
+
+            if (formTitle === '') {
+                alert('لطفاً یک نام برای فرم خود وارد کنید.');
+                formTitleInput.focus();
                 return;
             }
 
