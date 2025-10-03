@@ -53,11 +53,10 @@ class Tahlilgar_Analyzer {
         if ( file_exists( $puc_file ) ) {
             require_once $puc_file;
             $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-                'https://github.com/reddyindia/jules/',
+                'https://raw.githubusercontent.com/reddyindia/jules/main/metadata.json',
                 TA_PLUGIN_PATH . 'tahlilgar-analyzer.php',
                 'tahlilgar-analyzer'
             );
-            $myUpdateChecker->getVcsApi()->enableReleaseAssets();
         }
     }
 
@@ -164,20 +163,6 @@ class Tahlilgar_Analyzer {
                 'args'                => array( 'id' => array( 'validate_callback' => function($param) { return is_numeric($param); } ) ),
             ),
         ) );
-
-        // Route for deleting a form
-        register_rest_route( 'tahlilgar/v1', '/forms/(?P<id>\\d+)', array(
-            array(
-                'methods'             => WP_REST_Server::DELETABLE,
-                'callback'            => array( $this, 'delete_form_rest_handler' ),
-                'permission_callback' => function () { return current_user_can( 'publish_posts' ); },
-                'args'                => array(
-                    'id' => array(
-                        'validate_callback' => function($param) { return is_numeric($param); }
-                    ),
-                ),
-            ),
-        ) );
     }
 
     /**
@@ -206,30 +191,6 @@ class Tahlilgar_Analyzer {
         $response->header( 'Location', get_edit_post_link( $post_id, 'raw' ) );
 
         return $response;
-    }
-
-    /**
-     * REST API handler for deleting a form.
-     */
-    public function delete_form_rest_handler( WP_REST_Request $request ) {
-        $form_id = (int) $request['id'];
-        $post = get_post( $form_id );
-
-        if ( ! $post || 'tahlilgar_form' !== $post->post_type ) {
-            return new WP_Error( 'rest_post_invalid_id', __( 'Invalid form ID.', 'tahlilgar-analyzer' ), array( 'status' => 404 ) );
-        }
-
-        if ( ! current_user_can( 'delete_post', $form_id ) ) {
-            return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to delete this form.', 'tahlilgar-analyzer' ), array( 'status' => 403 ) );
-        }
-
-        $result = wp_delete_post( $form_id, true ); // true = force delete, bypass trash
-
-        if ( ! $result ) {
-            return new WP_Error( 'rest_cannot_delete', __( 'Error in deleting form.', 'tahlilgar-analyzer' ), array( 'status' => 500 ) );
-        }
-
-        return new WP_REST_Response( array( 'success' => true, 'message' => 'Form deleted successfully.' ), 200 );
     }
 
     /**

@@ -1,98 +1,24 @@
 jQuery(document).ready(function($) {
     if (typeof jQuery.fn.formBuilder === 'function') {
         const options = {
-            // Use preloaded translations to ensure they are always applied
             i18n: {
                 locale: 'fa-IR',
-                preloaded: {
-                    'fa-IR': {
-                        // Field types
-                        text: 'متن کوتاه',
-                        textarea: 'متن بلند',
-                        select: 'لیست کشویی',
-                        'radio-group': 'دکمه رادیویی',
-                        'checkbox-group': 'چک‌باکس چندگانه',
-                        checkbox: 'چک‌باکس تکی',
-                        number: 'عدد',
-                        date: 'تاریخ',
-                        file: 'آپلود فایل',
-                        starRating: 'امتیازدهی',
-                        paragraph: 'متن ثابت / جداکننده',
-                        // Subtypes that appear in the UI
-                        'text.email': 'ایمیل',
-                        'text.tel': 'تلفن',
-                        'text.url': 'آدرس وب',
-                        'text.time': 'زمان',
-                        // Common UI elements and attributes
-                        addOption: 'افزودن گزینه',
-                        label: 'عنوان (برچسب)',
-                        description: 'توضیحات',
-                        placeholder: 'متن راهنما (Placeholder)',
-                        required: 'ضروری',
-                        className: 'کلاس CSS',
-                        'remove': 'حذف',
-                        'edit': 'ویرایش',
-                        'copy': 'کپی',
-                        'Clear': 'پاک کردن همه',
-                        'Save': 'ذخیره',
-                        'get_data': 'دریافت داده',
-                        'save_template': 'ذخیره قالب',
-                        'add_field': 'افزودن فیلد',
-                        'cancel': 'انصراف',
-                        'close': 'بستن',
-                        'options': 'گزینه‌ها',
-                        'value': 'مقدار',
-                        'min': 'حداقل',
-                        'max': 'حداکثر',
-                        'step': 'گام',
-                        'toggle': 'حالت دکمه‌ای',
-                        'inline': 'افقی',
-                        'other': 'گزینه «سایر»',
-                        'role': 'نقش',
-                        'subtype': 'نوع فرعی',
-                        'maxlength': 'حداکثر طول',
-                        'rows': 'تعداد ردیف‌ها',
-                        'multiple': 'چند انتخابی',
-                        'access': 'دسترسی',
-                        'all': 'همه',
-                        'hidden': 'مخفی',
-                        'header': 'هدر',
-                        'button': 'دکمه',
-                        'autocomplete': 'تکمیل خودکار',
-                    }
-                }
+                location: 'https://cdn.jsdelivr.net/gh/dr-pro/form-builder-translations/lang/',
             },
-
-            // Disable default action buttons
             disabledActionButtons: ['data', 'save', 'clear'],
-
-            // Disable only the fields that are not part of the core requirement
-            disableFields: [
-                'autocomplete',
-                'button',
-                'hidden',
-                'header' // 'paragraph' will be used for section breaks
-            ],
-
-            // A minimal set of disabled attributes to keep the UI clean
+            disableFields: ['autocomplete', 'button', 'hidden', 'paragraph', 'header'],
             typeUserDisabledAttrs: {
-                'text': ['name', 'access'],
-                'textarea': ['name', 'access'],
-                'select': ['name', 'access'],
-                'radio-group': ['name', 'access'],
-                'checkbox-group': ['name', 'access'],
-                'checkbox': ['name', 'access'],
-                'number': ['name', 'access'],
-                'date': ['name', 'access'],
-                'file': ['name', 'access'],
-                'starRating': ['name', 'access'],
-                'paragraph': ['name', 'access'],
+                'checkbox-group': ['name', 'required', 'description', 'access', 'className', 'toggle'],
+                'radio-group': ['name', 'required', 'description', 'access', 'className', 'other', 'inline'],
+                'select': ['name', 'required', 'description', 'access', 'className', 'multiple'],
+                'text': ['name', 'required', 'description', 'access', 'className', 'subtype', 'maxlength', 'placeholder'],
+                'textarea': ['name', 'required', 'description', 'access', 'className', 'subtype', 'maxlength', 'rows'],
+                'number': ['name', 'required', 'description', 'access', 'className', 'min', 'max', 'step'],
+                'date': ['name', 'required', 'description', 'access', 'className'],
             },
         };
-
         const formBuilder = $('#form-builder-container').formBuilder(options);
 
-        // This part handles saving the form via AJAX (jQuery)
         $('#save-form-button').on('click', function() {
             const formTitle = $('#form-title').val().trim();
             const formData = formBuilder.actions.getData('json');
@@ -117,10 +43,11 @@ jQuery(document).ready(function($) {
                 },
                 data: {
                     form_title: formTitle,
-                    form_data: JSON.parse(formData)
+                    form_data: JSON.parse(formData) // Ensure data is sent as an object
                 },
                 success: function(response) {
                     statusDiv.text('فرم با موفقیت ذخیره شد!').css('color', 'green');
+                    // Redirect to form management page after a short delay
                     setTimeout(function() {
                         window.location.href = '/form-management';
                     }, 1500);

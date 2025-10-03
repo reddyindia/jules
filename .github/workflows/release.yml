@@ -1,0 +1,22 @@
+name: Build & Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Prepare Plugin ZIP
+        run: |
+          cd tahlilgar-analyzer
+          zip -r ../tahlilgar-analyzer.zip .
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: tahlilgar-analyzer.zip
