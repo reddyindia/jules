@@ -53,19 +53,10 @@ class Tahlilgar_Analyzer {
         if ( file_exists( $puc_file ) ) {
             require_once $puc_file;
             $myUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-                'https://github.com/reddyindia/jules/',
+                'https://raw.githubusercontent.com/reddyindia/jules/main/metadata.json',
                 TA_PLUGIN_PATH . 'tahlilgar-analyzer.php',
                 'tahlilgar-analyzer'
             );
-
-            // Set the branch to check for releases.
-            $myUpdateChecker->setBranch('main');
-
-            // Since the plugin is in a subdirectory, we must tell the VcsApi where the main file is.
-            $myUpdateChecker->getVcsApi()->setFile('tahlilgar-analyzer/tahlilgar-analyzer.php');
-
-            // Enable release assets to download the ZIP from releases.
-            $myUpdateChecker->getVcsApi()->enableReleaseAssets();
         }
     }
 
