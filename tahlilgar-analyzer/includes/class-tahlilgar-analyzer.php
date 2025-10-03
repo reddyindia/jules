@@ -58,15 +58,13 @@ class Tahlilgar_Analyzer {
                 'tahlilgar-analyzer'
             );
 
-            // Set the branch to check for releases
+            // Set the branch to check for releases.
             $myUpdateChecker->setBranch('main');
 
-            // Since the plugin is in a subdirectory, we must provide a direct URL to the file with headers.
-            $myUpdateChecker->setMetadataUrl(
-                'https://raw.githubusercontent.com/reddyindia/jules/main/tahlilgar-analyzer/tahlilgar-analyzer.php'
-            );
+            // Since the plugin is in a subdirectory, we must tell the VcsApi where the main file is.
+            $myUpdateChecker->getVcsApi()->setFile('tahlilgar-analyzer/tahlilgar-analyzer.php');
 
-            // Enable release assets to download the ZIP from releases
+            // Enable release assets to download the ZIP from releases.
             $myUpdateChecker->getVcsApi()->enableReleaseAssets();
         }
     }
