@@ -59,7 +59,12 @@ class Tahlilgar_Analyzer {
             );
 
             // Set the branch to check for releases
-            $myUpdateChecker->setBranch('feat/arshline-phase1-form-builder-core');
+            $myUpdateChecker->setBranch('main');
+
+            // Since the plugin is in a subdirectory, we must provide a direct URL to the file with headers.
+            $myUpdateChecker->setMetadataUrl(
+                'https://raw.githubusercontent.com/reddyindia/jules/main/tahlilgar-analyzer/tahlilgar-analyzer.php'
+            );
 
             // Enable release assets to download the ZIP from releases
             $myUpdateChecker->getVcsApi()->enableReleaseAssets();
